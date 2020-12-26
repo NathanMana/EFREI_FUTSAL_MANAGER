@@ -1,0 +1,63 @@
+<!doctype>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8">
+        <title>EFREI Futsal Manager</title>
+        <!-- Load Vue followed by Vue Router -->
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/http-vue-loader/src/httpVueLoader.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue-router/dist/vue-router.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">  
+        <link rel="stylesheet" href="app.css">
+        <style>
+          #alert-action {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px;
+            width: 100%;
+          }
+
+          #alert-action a {
+            margin: 10px;
+          } 
+
+          #displayAlert p {
+            font-size: 1.5em;
+            margin: 20px;
+            text-align: center;
+            font-weight: 500;
+          }
+        </style>
+    </head>
+    <body>
+        <div id="app">
+          <nav>
+            <router-link to='/' class="title">EFREI Futsal Manager</router-link>
+            <ul>
+              <li><router-link :to="{ path: 'login'}" append>Se connecter</a></router-link>
+              <li><router-link :to="{ path: 'registration'}" append>S'inscrire</router-link ></li>
+            </ul>
+          </nav>
+          <main>   
+            <router-view
+               @display-alert="displayAlert"
+               @registration="registration"
+            >
+            </router-view>
+          </main>
+          <section v-show="displayDOMAlert" id="displayAlert" class="overlay">
+            <article>
+                <p>{{alertMessage}}</p>
+                <div id="alert-action">
+                  <router-link to="/play/team/edit" class="btn">Oui</router-link>
+                  <a v-on:click="cancelAlert" class="btn btn-delete">Non</a>
+                </div>
+            </article>
+        </section>
+        </div>
+        <script src="/vue-application.js"></script>
+        <script src="https://kit.fontawesome.com/bd6408e1f8.js" crossorigin="anonymous"></script>
+    </body>
+</html>
