@@ -112,31 +112,92 @@ var app = new Vue({
     router,
     el: '#app',
     data: {
+        user: {
+            id: 0,
+            email: ""
+        },
         displayDOMAlert: false,
         alertMessage: "",
+        success: {
+            message: "",
+            state: false
+        },
+        error: {
+            message: "",
+            state: false
+        },
+        stateMenu: false
     },
     async mounted () {
+        try{
+            const result = await axios.get("/api/me")
+            if(result.data){
+                this.user = result.data
+            }
+        }
+        catch(error){
+            console.log(error.response.data.message)
+        }
     },
     methods: {
+        toggleMenu(){
+            this.stateMenu = !this.stateMenu
+        },
+        displaySuccess(message){
+            this.success.message = message
+            this.success.state = true
+            setTimeout(() => {
+                this.success.state = false
+                this.success.message = ""
+            }, 7000)
+        },
         cancelAlert(){
             this.displayDOMAlert = false
+            this.error.state = false
         },
         displayAlert(message){
             this.alertMessage = message
             this.displayDOMAlert = true
         },
         async registration(user){
-            console.log("user", user)
-            console.log("Jello");
             try {
                 await axios.post('/api/registration', user)
-                console.log("ok")
+                this.$router.push('/login')
+                this.displaySuccess("Inscription réussie")
             }
             catch(error){
                 if (error.response) {
-                    console.log(error.response.data.error);
+                    this.error.message = error.response.data.message
+                    this.error.state = true
                 }
             }   
+        },
+        async login(user){
+            try {
+                const result = await axios.post('/api/login', user)
+                this.user = result.data
+                this.$router.push('/')
+                this.displaySuccess(`Bienvenue ${this.user.username}`)
+            } 
+            catch(error){
+                if (error.response) {
+                    this.error.message = error.response.data.message
+                    this.error.state = true
+                }
+            }
+        },
+        async logout(){
+            try {
+                await axios.get("/api/logout")
+                this.user.id = 0
+                this.user.email =""
+                this.user.username = ""
+            } catch(error){
+                if (error.response) {
+                    this.error.message = error.response.data.message
+                    this.error.state = true
+                }
+            }
         }
     }
 })

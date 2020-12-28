@@ -7,7 +7,10 @@
             </div>
             <form @submit.prevent="login">
                 <input v-model="user.email" type="email" placeholder="Email">
-                <input v-model="user.password" type="password" name="" id="" placeholder="Mot de passe">
+                <div class="input-password">
+                    <input v-model="user.password" :type="passwordType" name="" id="" placeholder="Mot de passe">
+                    <i v-on:click="togglePassword" class="fas fa-eye toggle-password"></i>
+                </div>
                 <button class="btn" type="submit">Se connecter</button>
             </form>
             <span class="el-center">Pas de compte ?</span>
@@ -23,7 +26,8 @@
                 user: {
                     email: "",
                     password: "",
-                }
+                },
+                passwordType: "password"
             }
         },
         methods: {
@@ -32,7 +36,14 @@
             },
             redirection(){
                 router.back()
-            }
+            },
+            togglePassword(){
+                if(this.passwordType === "password"){
+                    this.passwordType = "text"
+                } else {
+                    this.passwordType = "password"
+                }
+            },
         }
     }
 </script>

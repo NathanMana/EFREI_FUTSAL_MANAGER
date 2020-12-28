@@ -11,9 +11,15 @@
                 <div v-show="errorUsername.state" class="error">{{errorUsername.message}}</div>
                 <input v-model="user.username" type="text" placeholder="Pseudo" name="" id="">
                 <div v-show="errorPassword.state" class="error">{{errorPassword.message}}</div>
-                <input v-model="user.password" type="password" name="" id="" placeholder="Mot de passe">
+                <div class="input-password">
+                    <input v-model="user.password" :type="passwordType" name="" id="" placeholder="Mot de passe">
+                    <i v-on:click="togglePassword" class="fas fa-eye toggle-password"></i>
+                </div>
                 <div v-show="errorPasswordConfirmation.state" class="error">{{errorPasswordConfirmation.message}}</div>
-                <input v-model="user.repeatPassword" type="password" name="" id="" placeholder="Répétez le mot de passe">
+                <div class="input-password">
+                    <input v-model="user.repeatPassword" :type="repeatPasswordType" name="" id="" placeholder="Répéter le mot de passe">
+                    <i v-on:click="toggleRepeatPassword" class="fas fa-eye toggle-password"></i>
+                </div>
                 <button class="btn" type="submit">S'inscrire</button>
             </form>
             <span class="el-center">Déjà un compte ?</span>
@@ -48,6 +54,8 @@
                     message: "",
                     state: false
                 },
+                passwordType: "password",
+                repeatPasswordType: "password"
             }
         },
         methods: {
@@ -83,12 +91,25 @@
                 }
 
                 if(!errors){
-                    
-                    this.$emit('registration', this.user.email)
+                    this.$emit('registration', this.user)
                 }
             },
             redirection(){
                 router.back()
+            },
+            togglePassword(){
+                if(this.passwordType === "password"){
+                    this.passwordType = "text"
+                } else {
+                    this.passwordType = "password"
+                }
+            },
+            toggleRepeatPassword(){
+                if(this.repeatPasswordType === "password"){
+                    this.repeatPasswordType = "text"
+                } else {
+                    this.repeatPasswordType = "password"
+                }
             }
         }
     }

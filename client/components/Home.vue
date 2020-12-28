@@ -1,6 +1,10 @@
 <template>
     <section id="home">
-        <router-view></router-view>
+        <router-view 
+            @registration = "registration"
+            @login = "login"
+        >
+        </router-view>
         <div class="left">
             <h1>EFREI Futsal Manager</h1>
             <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Ducimus consequatur quo explicabo illum molestiae perferendis delectus qui tempore a! Aperiam a veritatis maxime doloribus expedita accusamus. Odit alias nemo laudantium.</p>
@@ -19,8 +23,11 @@
             }
         },
         methods: {
-            login(){
-                this.$emit('login', this.user)
+            login(user){
+                this.$emit('login', user)
+            },
+            registration(user){
+                this.$emit('registration', user)
             }
         }
     }

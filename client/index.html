@@ -33,17 +33,50 @@
     </head>
     <body>
         <div id="app">
-          <nav>
+          <nav v-if="!user.id">
             <router-link to='/' class="title">EFREI Futsal Manager</router-link>
             <ul>
-              <li><router-link :to="{ path: 'login'}" append>Se connecter</a></router-link>
+              <li><router-link :to="{ path: 'login'}" append>Se connecter</router-link>
               <li><router-link :to="{ path: 'registration'}" append>S'inscrire</router-link ></li>
             </ul>
           </nav>
+          <nav id="nav-connected" v-else>
+            <ul>
+              <li><router-link to='/' id="nav-play">Passer à la semaine suivante</router-link></li>
+              <li class="nav-play-li"><router-link to='/'>Equipe</router-link></li>
+              <li class="nav-play-li"><router-link to='/'>Entraînement</router-link></li>
+              <li class="nav-play-li"><router-link to='/'>Classement</router-link></li>
+              <li class="nav-play-li"><router-link to='/'>Recrutement</router-link></li>
+              <li v-on:click="toggleMenu" id="menu-responsive"><div class="point"></div><div class="point"></div><div class="point"></div></li>
+            </ul>
+            <ul>
+              <li><a id="logout" v-on:click="logout">Déconnexion</a></li>
+            </ul>
+          </nav>
+          <aside :class="{ 'open' : stateMenu }">
+            <nav v-if="!user.id">
+              <ul>
+                <li><router-link :to="{ path: 'login'}" append>Se connecter</router-link>
+                <li><router-link :to="{ path: 'registration'}" append>S'inscrire</router-link ></li>
+              </ul>
+            </nav>
+            <nav id="nav-connected" v-else>
+              <ul>
+                <li class="nav-play-li"><router-link to='/'>Equipe</router-link></li>
+                <li class="nav-play-li"><router-link to='/'>Entraînement</router-link></li>
+                <li class="nav-play-li"><router-link to='/'>Classement</router-link></li>
+                <li class="nav-play-li"><router-link to='/'>Recrutement</router-link></li>
+              </ul>
+              <ul>
+                <li><a id="logout" v-on:click="logout">Déconnexion</a></li>
+              </ul>
+            </nav>
+          </aside>
           <main>   
             <router-view
                @display-alert="displayAlert"
                @registration="registration"
+               @login = "login"
             >
             </router-view>
           </main>
@@ -55,7 +88,16 @@
                   <a v-on:click="cancelAlert" class="btn btn-delete">Non</a>
                 </div>
             </article>
-        </section>
+          </section>
+          <section v-show="error.state" class="overlay">
+            <article class="errorArticle">
+                <p style="text-align: center;font-size: 1.3em;">{{error.message}}</p>
+                <div style="margin-top: 10px;width: 100%;text-align:center;">
+                  <a v-on:click="cancelAlert" style="display:block;margin: 0 auto;" class="btn btn-delete">Fermer</a>
+                </div>
+            </article>
+          </section>
+          <div v-bind:class="{'success': success.state}">{{success.message}}</div>
         </div>
         <script src="/vue-application.js"></script>
         <script src="https://kit.fontawesome.com/bd6408e1f8.js" crossorigin="anonymous"></script>
