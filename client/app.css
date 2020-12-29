@@ -524,3 +524,7 @@ form select option {
     margin: 0;
     width: fit-content;
 }
+
+.test{
+    background: none;
+}
