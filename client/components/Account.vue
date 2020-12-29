@@ -3,8 +3,9 @@
         <router-view></router-view>
         <h1>Mon compte</h1>
         <div style="width:50%;min-width:500px;display:block;margin: 0 auto;" class="container">
-            <form @submit.prevent="account">
+            <form @submit.prevent="editAccount">
                 <h2>Modifier les informations</h2>
+                <div v-show="error.state" class="error">{{error.message}}</div>
                 <input v-model="user.username" type="text" placeholder="Pseudo">
                 <input v-model="user.email" type="email" placeholder="Email">
                 <button class="btn" type="submit">Modifier</button>
@@ -20,20 +21,32 @@
 
 <script>
     module.exports = {
+        props: {
+            user: {type: Object},
+        },
         data () {
             return {
-                user: {
-                    username: "",
-                    email: "",
+                error : {
+                    message: "",
+                    state: ""
                 }
             }
         },
         methods: {
-            account(){
-                this.$emit('account', this.user)
+            editAccount(){     
+                this.error.state = false
+                if(!this.user.username || !this.user.email){
+                    this.error.message = "Aucun champ ne peut être vide"
+                    this.error.state = true
+                }
+                //Pas besoin d'envoyer l'objet car déjà présent dans l'élément parent
+                if(!this.error.state){
+                    this.$emit('edit-account')
+                }
             },
             deleteAccount(){
-                this.$emit('deleteAccount')
+                let message = "Voulez-vous vraiment supprimer votre compte. Cette action est irrévocable et entrainera la perte de toutes vos données"
+                this.$emit('display-alert', message, "delete-account")
             }
         }
     }

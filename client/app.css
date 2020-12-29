@@ -95,6 +95,7 @@ p, span, ul, li {
     width: fit-content;
     display: block;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 button.btn {
@@ -186,13 +187,14 @@ ul {
     width: 90%;
     left:5%;
     z-index: 15;
-    animation: success-fade 5s forwards;
+    animation: success-fade 6s forwards;
     text-transform: uppercase;
     font-size: 1.1em;
+    opacity: 0;
 }
 
 @keyframes success-fade {
-    0%, 100%{
+    0% {
         display: block;
     }
     1%, 99% {
@@ -200,6 +202,9 @@ ul {
     }    
     2%,95% {
         opacity: 1;
+    }
+    100% {
+        display: none;
     }
 }
 
@@ -324,7 +329,7 @@ aside nav ul li a {
     display: block;
 }
 
-@media screen and (max-width: 1120px){
+@media screen and (max-width: 1270px){
     .nav-play-li {
         display: none;
     }

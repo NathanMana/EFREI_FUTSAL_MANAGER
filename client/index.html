@@ -42,11 +42,12 @@
           </nav>
           <nav id="nav-connected" v-else>
             <ul>
-              <li><router-link to='/' id="nav-play">Passer à la semaine suivante</router-link></li>
-              <li class="nav-play-li"><router-link to='/'>Equipe</router-link></li>
-              <li class="nav-play-li"><router-link to='/'>Entraînement</router-link></li>
-              <li class="nav-play-li"><router-link to='/'>Classement</router-link></li>
-              <li class="nav-play-li"><router-link to='/'>Recrutement</router-link></li>
+              <li><router-link to='/play/simulation' id="nav-play">Passer à la semaine suivante</router-link></li>
+              <li class="nav-play-li"><router-link to='/play/team'>Equipe</router-link></li>
+              <li class="nav-play-li"><router-link to='/play/training'>Entraînement</router-link></li>
+              <li class="nav-play-li"><router-link to='/play/ranking'>Classement</router-link></li>
+              <li class="nav-play-li"><router-link to='/play/recrutment'>Recrutement</router-link></li>
+              <li class="nav-play-li"><router-link to='/account'>Mon compte</router-link></li>
               <li v-on:click="toggleMenu" id="menu-responsive"><div class="point"></div><div class="point"></div><div class="point"></div></li>
             </ul>
             <ul>
@@ -62,10 +63,11 @@
             </nav>
             <nav id="nav-connected" v-else>
               <ul>
-                <li class="nav-play-li"><router-link to='/'>Equipe</router-link></li>
-                <li class="nav-play-li"><router-link to='/'>Entraînement</router-link></li>
-                <li class="nav-play-li"><router-link to='/'>Classement</router-link></li>
-                <li class="nav-play-li"><router-link to='/'>Recrutement</router-link></li>
+                <li class="nav-play-li"><router-link to='/play/team'>Equipe</router-link></li>
+                <li class="nav-play-li"><router-link to='/play/training'>Entraînement</router-link></li>
+                <li class="nav-play-li"><router-link to='/play/ranking'>Classement</router-link></li>
+                <li class="nav-play-li"><router-link to='/play/recrutment'>Recrutement</router-link></li>
+                <li class="nav-play-li"><router-link to='/account'>Mon compte</router-link></li>
               </ul>
               <ul>
                 <li><a id="logout" v-on:click="logout">Déconnexion</a></li>
@@ -74,17 +76,21 @@
           </aside>
           <main>   
             <router-view
+               :user="user"
                @display-alert="displayAlert"
                @registration="registration"
                @login = "login"
+               @edit-account = "editAccount"
+               @edit-password = "editPassword"
+               @delete-account = "deleteAccount"
             >
             </router-view>
           </main>
-          <section v-show="displayDOMAlert" id="displayAlert" class="overlay">
+          <section v-show="alert.displayDOMAlert" id="displayAlert" class="overlay">
             <article>
-                <p>{{alertMessage}}</p>
+                <p>{{alert.alertMessage}}</p>
                 <div id="alert-action">
-                  <router-link to="/play/team/edit" class="btn">Oui</router-link>
+                  <a v-on:click="confirmAlert" class="btn">Oui</a>
                   <a v-on:click="cancelAlert" class="btn btn-delete">Non</a>
                 </div>
             </article>

@@ -122,8 +122,12 @@ var app = new Vue({
             id: 0,
             email: ""
         },
-        displayDOMAlert: false,
-        alertMessage: "",
+        alert: {
+            displayDOMAlert: false,
+            alertMessage: "",
+            action: "", //Stocke l'action a exécuter, si l'utilisateur confirme son action
+            dataAction: {}, //Stocke les données de l'action à exécuter
+        },
         success: {
             message: "",
             state: false
@@ -158,12 +162,35 @@ var app = new Vue({
             }, 7000)
         },
         cancelAlert(){
-            this.displayDOMAlert = false
+            this.alert.displayDOMAlert = false
             this.error.state = false
         },
-        displayAlert(message){
-            this.alertMessage = message
-            this.displayDOMAlert = true
+        confirmAlert(){
+            let nameAction = this.alert.action
+            let data = this.alert.dataAction
+            this.alert.alertMessage = ""
+            this.alert.displayDOMAlert = false
+            this.alert.action = ""
+            this.alert.dataAction = {}
+
+            switch (nameAction){
+                case 'delete-account':
+                    this.deleteAccount()
+                    break;
+            }
+        },
+        displayAlert(message, action, data){
+            this.alert.alertMessage = message
+            this.alert.displayDOMAlert = true
+            this.alert.action = action
+            if (data)
+                this.alert.dataAction = data
+        },
+        errorMessage(error){
+            if (error.response) {
+                this.error.message = error.response.data.message
+                this.error.state = true
+            }
         },
         async registration(user){
             try {
@@ -172,10 +199,7 @@ var app = new Vue({
                 this.displaySuccess("Inscription réussie")
             }
             catch(error){
-                if (error.response) {
-                    this.error.message = error.response.data.message
-                    this.error.state = true
-                }
+                this.errorMessage(error)
             }   
         },
         async login(user){
@@ -186,10 +210,7 @@ var app = new Vue({
                 this.displaySuccess(`Bienvenue ${this.user.username}`)
             } 
             catch(error){
-                if (error.response) {
-                    this.error.message = error.response.data.message
-                    this.error.state = true
-                }
+                this.errorMessage(error)
             }
         },
         async logout(){
@@ -198,11 +219,38 @@ var app = new Vue({
                 this.user.id = 0
                 this.user.email =""
                 this.user.username = ""
+                this.$router.push('/')
             } catch(error){
-                if (error.response) {
-                    this.error.message = error.response.data.message
-                    this.error.state = true
-                }
+                this.errorMessage(error)
+            }
+        },
+        async editAccount(){
+            try{
+                await axios.post("/api/account/edit", this.user)
+                this.displaySuccess(`Modifications effectuées avec succès`)
+            } catch(error){
+                this.errorMessage(error)
+            }
+        },
+        async editPassword(userPassword){
+            try{
+                await axios.post("/api/account/edit-password", userPassword)
+                this.displaySuccess(`Modifications effectuées avec succès`)
+                this.$router.push('/account')
+            } catch(error){
+                this.errorMessage(error)
+            }
+        },
+        async deleteAccount(){
+            try{
+                await axios.delete("/api/account/delete")
+                this.displaySuccess(`Suppression réussie. A la prochaine !`)
+                this.$router.push('/')
+                this.user.id = 0
+                this.user.email =""
+                this.user.username = ""
+            } catch(error){
+                this.errorMessage(error)
             }
         }
     }
