@@ -17,6 +17,7 @@ const CreatePlayer = window.httpVueLoader('./components/Team/_CreatePlayer.vue')
 const EditPlayer = window.httpVueLoader('./components/Team/_EditPlayer.vue')
 const Team = window.httpVueLoader('./components/Team/Team.vue')
 const EditTeam = window.httpVueLoader('./components/Team/_EditTeam.vue')
+const Training = window.httpVueLoader('./components/Team/Training.vue')
 
 
 const children = [
@@ -95,6 +96,11 @@ const routes = [
     { 
         path: '/play/recrutement', 
         component: Recrutement, 
+        children
+    },
+    { 
+        path: '/play/training', 
+        component: Training, 
         children
     },
     { 
