@@ -61,6 +61,7 @@ router.post('/login', async (req,res) => {
     //On vérifie si l'email ou le mdp ne sont pas nuls
     if(!email || !password){
         res.status(401).json({message: "Problème dans le formulaire"})
+        return
     }
 
     //On essaie de récupérer l'utilisateur
@@ -72,12 +73,14 @@ router.post('/login', async (req,res) => {
     //Si pas d'utilisateur alors les identifiants sont incorrects
     if(result.rows.length === 0){
         res.status(401).json({message: "Identifiants incorrects"})
+        return
     }
 
     const user = result.rows[0]
     const correspondingPassword = await bcrypt.compare(password, user.password)
     if(!correspondingPassword){
         res.status(401).json({message: "Identifiants incorrects"})
+        return
     }
 
     req.session.user = {
@@ -94,6 +97,7 @@ router.post('/login', async (req,res) => {
 router.get('/me', async (req, res) => {
     if(!req.session.user || !req.session.user.id){
         res.status(401).json({message: "Pas connecté"})
+        return
     }
 
     res.json(req.session.user);
@@ -103,10 +107,110 @@ router.get('/me', async (req, res) => {
 router.get('/logout', async (req, res) => {
     if(!req.session.user || !req.session.user.id){
         res.status(401).json({message: "Pas de compte connecté"})
+        return
     }
 
     delete req.session.user
     res.json({message: "Success"});
+})
+
+/* MODIFICATION DU COMPTE */
+router.post('/account/edit', async (req, res) => {
+
+    if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
+        res.status(403).json({message: "Accès non autorisé"})
+        return
+    }
+
+    const email = req.body.email
+    const username = req.body.username
+    const id = req.body.id
+    
+    //On vérifie que l'utilisateur soit bien connecté
+    if(!id || id <= 0 ){
+        res.status(501).json({message: "Vous ne pouvez pas réaliser ça"})
+        return
+    }
+
+    //On vérifie que ca ne soit pas nul
+    if(!email || !username){
+        res.status(401).json({message: "Les champs ne peuvent pas être vides"})
+        return
+    }
+
+    //On applique les changements
+    const result = await client.query({
+        text: 'UPDATE users SET email = $1, username = $2 WHERE id = $3',
+        values: [email, username, id]
+    })
+
+    //On met à jour l'objet user dans la session
+    req.session.user.username = username
+    req.session.user.email = email
+
+    res.send("ok")
+})
+
+/* MODIFICATION DU MOT DE PASSE */
+router.post('/account/edit-password', async (req, res) => {
+
+    if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
+        res.status(403).json({message: "Accès non autorisé"})
+        return
+    }
+
+    const currentPassword = req.body.currentPassword
+    const newPassword = req.body.newPassword
+    const repeatNewPassword = req.body.repeatNewPassword
+    
+    //On vérifie que le nouveau mdp et la répétition soit égaux
+    if(newPassword != repeatNewPassword){
+        res.status(401).json({message: "Les mots de passes indiqués sont différents"})
+        return
+    }
+
+    //On récupère le mot de passe de l'utilisateur pour vérifier si le mdp indiqué est conforme
+    const result = await client.query({
+        text: 'SELECT password FROM users WHERE id = $1',
+        values: [req.session.user.id]
+    })
+
+    const correspondingPassword = await bcrypt.compare(currentPassword, result.rows[0].password)
+    if(!correspondingPassword){
+        res.status(401).json({message: "Le mot de passe indiqué est incorrect"})
+        return
+    }
+
+    //On vérifie que le nouveau mot de passe respecte les conditions
+    if(newPassword.length < 8 || !newPassword.match(/^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?])/g)){
+        res.status(401).json({message: 'Le mot de passe ne remplit pas les critères de sécurité'})
+        return
+    }
+
+    //On peut mettre à jour le mot de passe
+    const hash = await bcrypt.hash(newPassword, 10)
+    await client.query({
+        text: 'UPDATE users SET password = $1 WHERE id = $2',
+        values: [hash, req.session.user.id]
+    })
+
+    res.send("ok")
+})
+
+router.delete('/account/delete', async (req, res) => {
+    if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
+        res.status(403).json({message: "Accès non autorisé"})
+        return
+    }
+
+    await client.query({
+        text: 'DELETE FROM users WHERE id = $1',
+        values: [req.session.user.id]
+    })
+
+    delete req.session.user
+
+    res.send("ok")
 })
 
 module.exports = router
