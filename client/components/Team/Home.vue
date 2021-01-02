@@ -1,42 +1,40 @@
 <template>
     <section id="home-team">
+        <router-view></router-view>
         <div class="title">
-            <img src="http://placehold.it/50x50" alt="">
-            <h1>Among 4es</h1>
+            <img v-if="team.image" :src="team.image" alt="">
+            <h1>{{team.name}}</h1>
         </div>
         <div class="content">
             <div class="content-element" id="classement">
                 <h2 class="h2-table">Classement</h2>
                 <table>
                     <tbody>
-                        <tr><td>
-                            <span>1 - </span>
-                            <img src="http://placehold.it/30x30" alt="">
-                            <span>Les licornes de Maurepas</span>
-                        </td></tr>
-                        <tr><td>
-                            <span>2 - </span>
-                            <img src="http://placehold.it/30x30" alt="">
-                            <span>Les licornes de Maurepas</span>
-                        </td></tr>
-                        <tr><td class="see-next"><a>Voir la suite</a></td></tr>
+                        <tr v-for="(team, index) in ranking" :key="team.team_id">
+                            <td>
+                                <span>{{index + 1}} - </span>
+                                <img v-if="team.image" :src="team.image" alt="">
+                                <img v-else src="http://placehold.it/20x20" alt="">
+                                <span>{{team.name}}</span>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
             <div class="content-element" id="forme">
                 <h2 class="h2-table">Etat de forme des joueurs</h2>
-                <table class="style-table">
+                <table v-if="players.length > 0" class="style-table">
                     <tbody>
-                        <tr><td>
-                            <span class="style-rect">95%</span>
-                            <span class="table-content">Maxime TRAN</span>
-                        </td></tr>
-                        <tr><td>
-                            <span class="style-rect">75%</span>
-                            <span class="table-content">Rachid TRAN</span>
-                        </td></tr>
-                        <tr><td class="see-next"><a>Voir la suite</a></td></tr>
+                        <tr v-for="player in players" :key="player.player_id">
+                            <td>
+                                <span class="style-rect">{{player.energie}}</span>
+                                <span class="table-content">{{player.firstname}} <span style="text-transform:uppercase;">{{player.name}}</span></span>
+                            </td>
+                        </tr>
                     </tbody>
+                </table>
+                <table v-else>
+                    <tr><td><span style="text-align:right;width:100%;">Vous n'avez pas de joueur</span></td></tr>
                 </table>
             </div>
         </div>
@@ -45,6 +43,11 @@
 
 <script>
     module.exports = {
+        props: {
+            ranking: Array,
+            players: Array,
+            team: Object
+        },
         data () {
             return {
             }
@@ -55,14 +58,30 @@
     }
 </script>
 <style scoped>
-.style-table tbody tr:nth-child(2n){
-    background: var(--blue_semi_dark);
-}
+    .style-table tbody tr:nth-child(2n){
+        background: var(--blue_semi_dark);
+    }
 
-.style-table tbody tr:nth-child(2n + 1){
-    background: var(--blue_dark);
-}
+    .style-table tbody tr:nth-child(2n + 1){
+        background: var(--blue_dark);
+    }
     
+    #classement td img {
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+    }
+
+    #classement table {
+        border-collapse: collapse;
+    }
+    #classement tr:nth-child(2n){
+        background: var(--blue_semi_dark);
+    }
+
+    #classement tr:nth-child(2n + 1){
+        background: var(--blue_dark);
+    }
 
     .content {
         display: flex;

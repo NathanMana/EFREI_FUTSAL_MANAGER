@@ -519,13 +519,13 @@ form select option {
 
 .title img {
     margin: 15px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: contain;
 }
 
 .title h1 {
     margin: 0;
     width: fit-content;
-}
-
-.test{
-    background: none;
 }

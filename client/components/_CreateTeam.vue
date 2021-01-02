@@ -6,6 +6,7 @@
                 <i v-on:click="redirection" class="fas fa-times icon-close"></i>
             </div>
             <form @submit.prevent="createTeam">
+                <div v-show="error.state" class="error">{{error.message}}</div>
                 <input v-model="team.name" type="text" placeholder="Nom de l'équipe">
                 <input v-model="team.image" type="text" placeholder="Lien vers l'image" name="" id="">
                 <select v-model="team.difficulty" name="" id="">
@@ -28,12 +29,28 @@
                     name: "",
                     image: "",
                     difficulty: ""
+                },
+                error : {
+                    message: "",
+                    state: false
                 }
             }
         },
         methods: {
             createTeam(){
-                this.$emit('create-team', this.user)
+
+                this.error.state = false
+                if(!this.team.difficulty){
+                    this.error.message = "Veuillez sélectionner une difficulté"
+                    this.error.state = true
+                }
+                if(!this.team.name){
+                    this.error.message = "Le nom ne peut pas être nul"
+                    this.error.state = true
+                }
+
+                if(!this.error.state)
+                    this.$emit('create-team', this.team)
             },
             redirection(){
                 router.back()

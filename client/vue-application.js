@@ -20,25 +20,17 @@ const EditTeam = window.httpVueLoader('./components/Team/_EditTeam.vue')
 const Training = window.httpVueLoader('./components/Team/Training.vue')
 
 
-const children = [
+const children = [ 
     {
-        path: '/team/create',
-        component: CreateTeam
-    },
-    {
-        path: '/play/simulation',
+        path: 'play/simulation',
         component: Simulation
     },
     {
-        path: '/play/recrutement/create',
-        component: CreatePlayer
-    },
-    {
-        path: '/play/team/player/edit/:id',
+        path: 'play/team/player/edit/:id',
         component: EditPlayer
     },
     {
-        path: '/play/team/edit',
+        path: 'play/team/edit',
         component: EditTeam
     },
 ]
@@ -57,21 +49,16 @@ const routes = [
                 path: 'registration',
                 component: Registration
             }, 
+            {
+                path: 'team/create',
+                component: CreateTeam
+            },
         ]
     },
     { 
         path: '/account', 
-        component: Account, 
-        children: [
-            {
-                path: 'login',
-                component: Login
-            },
-            {
-                path: 'registration',
-                component: Registration
-            }, 
-        ]
+        component: Account,
+        children
     },
     { 
         path: '/account/password/edit', 
@@ -96,7 +83,12 @@ const routes = [
     { 
         path: '/play/recrutement', 
         component: Recrutement, 
-        children
+        children: [
+            {
+                path: 'create-player',
+                component: CreatePlayer
+            },
+        ]
     },
     { 
         path: '/play/training', 
@@ -120,8 +112,16 @@ var app = new Vue({
     data: {
         user: {
             id: 0,
-            email: ""
+            email: "",
+            username: "",
+            hasRunningGame: false
         },
+        myTeam: {
+            name: "",
+            image: ""
+        },
+        myPlayers: [],
+        ranking: [],
         alert: {
             displayDOMAlert: false,
             alertMessage: "",
@@ -140,13 +140,25 @@ var app = new Vue({
     },
     async mounted () {
         try{
+            //on récupère les informations sur l'utilisateur
             const result = await axios.get("/api/me")
             if(result.data){
                 this.user = result.data
             }
+
+            //On récupère les informations sur la partie en cours si elle subsiste
+            if(this.user.hasRunningGame){
+                const resultGame = await axios.get("/api/mygame")
+                this.ranking = resultGame.data.ranking
+                this.myPlayers = resultGame.data.players
+                this.myTeam.name = resultGame.data.myTeam.name
+                this.myTeam.image = resultGame.data.myTeam.image
+            }
         }
         catch(error){
-            console.log(error.response.data.message)
+            if(window.location.href != "http://localhost:3000/#/"){
+                this.$router.push('/')
+            }
         }
     },
     methods: {
@@ -192,6 +204,12 @@ var app = new Vue({
                 this.error.state = true
             }
         },
+        checkConnection(){
+            if(this.user.id && this.user.id > 0){
+                return true
+            }
+            return false
+        },
         async registration(user){
             try {
                 await axios.post('/api/registration', user)
@@ -206,7 +224,17 @@ var app = new Vue({
             try {
                 const result = await axios.post('/api/login', user)
                 this.user = result.data
-                this.$router.push('/')
+                if(this.user.hasRunningGame){
+                    const resultGame = await axios.get("/api/mygame")
+                    this.ranking = resultGame.data.ranking
+                    this.myPlayers = resultGame.data.players
+                    this.myTeam.name = resultGame.data.myTeam.name
+                    this.myTeam.image = resultGame.data.myTeam.image
+                    this.$router.push('/play/')
+                } else {
+                    this.$router.push('/team/create')
+                }
+                
                 this.displaySuccess(`Bienvenue ${this.user.username}`)
             } 
             catch(error){
@@ -219,6 +247,12 @@ var app = new Vue({
                 this.user.id = 0
                 this.user.email =""
                 this.user.username = ""
+                this.user.game = 0,
+                this.user.hasRunningGame = false,
+                this.ranking = [],
+                this.myPlayers = [],
+                this.myTeam.name = "",
+                this.myTeam.image = "",
                 this.$router.push('/')
             } catch(error){
                 this.errorMessage(error)
@@ -249,6 +283,22 @@ var app = new Vue({
                 this.user.id = 0
                 this.user.email =""
                 this.user.username = ""
+            } catch(error){
+                this.errorMessage(error)
+            }
+        },
+        async deleteGame(){
+
+        },
+        async createTeam(team){
+            try{
+                const result = await axios.post("/api/team/create", team)
+                this.ranking = result.data
+                this.myTeam.name = team.name
+                this.myTeam.image = team.image
+                this.user.hasRunningGame = true
+                this.displaySuccess('Partie créée !')
+                this.$router.push('/play')
             } catch(error){
                 this.errorMessage(error)
             }
