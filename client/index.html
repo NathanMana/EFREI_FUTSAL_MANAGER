@@ -46,7 +46,7 @@
               <li class="nav-play-li"><router-link to='/play/team'>Equipe</router-link></li>
               <li class="nav-play-li"><router-link to='/play/training'>Entraînement</router-link></li>
               <li class="nav-play-li"><router-link to='/play/ranking'>Classement</router-link></li>
-              <li class="nav-play-li"><router-link to='/play/recrutment'>Recrutement</router-link></li>
+              <li class="nav-play-li"><router-link to='/play/recrutement'>Recrutement</router-link></li>
               <li class="nav-play-li"><router-link to='/account'>Mon compte</router-link></li>
               <li v-on:click="toggleMenu" id="menu-responsive"><div class="point"></div><div class="point"></div><div class="point"></div></li>
             </ul>
@@ -66,7 +66,7 @@
                 <li class="nav-play-li"><router-link to='/play/team'>Equipe</router-link></li>
                 <li class="nav-play-li"><router-link to='/play/training'>Entraînement</router-link></li>
                 <li class="nav-play-li"><router-link to='/play/ranking'>Classement</router-link></li>
-                <li class="nav-play-li"><router-link to='/play/recrutment'>Recrutement</router-link></li>
+                <li class="nav-play-li"><router-link to='/play/recrutement'>Recrutement</router-link></li>
                 <li class="nav-play-li"><router-link to='/account'>Mon compte</router-link></li>
               </ul>
               <ul>
@@ -77,12 +77,16 @@
           <main>   
             <router-view
                :user="user"
+               :players= "myPlayers"
+               :ranking = "ranking"
+               :team = "myTeam"
                @display-alert="displayAlert"
                @registration="registration"
                @login = "login"
                @edit-account = "editAccount"
                @edit-password = "editPassword"
                @delete-account = "deleteAccount"
+               @create-team = "createTeam"
             >
             </router-view>
           </main>

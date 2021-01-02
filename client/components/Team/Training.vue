@@ -1,5 +1,6 @@
 <template>
     <section id="training">
+        <router-view></router-view>
         <div class="title">
             <h1>Entrainement</h1>
         </div>
@@ -91,7 +92,6 @@
     background: var(--blue_dark);
 }
     
-
 .content {
     display: flex;
     justify-content: space-between;

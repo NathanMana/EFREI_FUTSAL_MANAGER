@@ -1,11 +1,12 @@
 <template>
     <section id="recrutement">
+        <router-view></router-view>
         <h1>Recrutement</h1>
-        <router-link to="/play/recrutement/create" class="btn el-center">Créer un joueur </router-link>  
+        <router-link :to="{ path: 'create-player'}" append class="btn el-center">Créer un joueur </router-link>  
         <div class="content">
-            <article>
+            <article class="article-recrutement">
                 <img src="http://placehold.it/50x50">
-                <h2>Nom</h2>
+                <h2 class="h2-content">Nom</h2>
                 <div class="article-content">
                     <div class="article-content-item">
                         <span class="style-rect">4/5</span>
@@ -19,87 +20,6 @@
                     <button>Acheter</button>
                 </div>    
             </article>
-            <article>
-                <img src="http://placehold.it/50x50">
-                <h2>Nom</h2>
-                <div class="article-content">
-                    <div class="article-content-item">
-                        <span class="style-rect">4/5</span>
-                        <span class="description">Endurance</span>
-                    </div>  
-                    <div class="article-content-item">
-                        <span class="style-rect">4/5</span>
-                        <span class="description">Note générale</span>
-                    </div>   
-                    <h3>Prix</h3>
-                    <button>Acheter</button>
-                </div>    
-            </article>
-            <article>
-                <img src="http://placehold.it/50x50">
-                <h2>Nom</h2>
-                <div class="article-content">
-                    <div class="article-content-item">
-                        <span class="style-rect">4/5</span>
-                        <span class="description">Endurance</span>
-                    </div>  
-                    <div class="article-content-item">
-                        <span class="style-rect">4/5</span>
-                        <span class="description">Note générale</span>
-                    </div>   
-                    <h3>Prix</h3>
-                    <button>Acheter</button>
-                </div>    
-            </article>
-            <article>
-                <img src="http://placehold.it/50x50">
-                <h2>Nom</h2>
-                <div class="article-content">
-                    <div class="article-content-item">
-                        <span class="style-rect">4/5</span>
-                        <span class="description">Endurance</span>
-                    </div>  
-                    <div class="article-content-item">
-                        <span class="style-rect">4/5</span>
-                        <span class="description">Note générale</span>
-                    </div>   
-                    <h3>Prix</h3>
-                    <button>Acheter</button>
-                </div>    
-            </article>
-            <article>
-                <img src="http://placehold.it/50x50">
-                <h2>Nom</h2>
-                <div class="article-content">
-                    <div class="article-content-item">
-                        <span class="style-rect">4/5</span>
-                        <span class="description">Endurance</span>
-                    </div>  
-                    <div class="article-content-item">
-                        <span class="style-rect">4/5</span>
-                        <span class="description">Note générale</span>
-                    </div>   
-                    <h3>Prix</h3>
-                    <button>Acheter</button>
-                </div>    
-            </article>
-            <article>
-                <img src="http://placehold.it/50x50">
-                <h2>Nom</h2>
-                <div class="article-content">
-                    <div class="article-content-item">
-                        <span class="style-rect">4/5</span>
-                        <span class="description">Endurance</span>
-                    </div>  
-                    <div class="article-content-item">
-                        <span class="style-rect">4/5</span>
-                        <span class="description">Note générale</span>
-                    </div>   
-                    <h3>Prix</h3>
-                    <button>Acheter</button>
-                </div>    
-            </article>
-
         </div>
     </section>
 </template>
@@ -124,19 +44,19 @@
     justify-content: center;
     padding: 30px;
 }
-article{
+article.article-recrutement {
     width: 300px;
     height: 400px;
     border: 3px solid var(--blue_light);
     margin: 15px;
     background: var(--blue_dark);
 }
-article img{
+article.article-recrutement img{
     width: 100%;
     height: 150px;
     object-fit: cover;
 }
-article h2{
+article.article-recrutement h2.h2-content{
     background-color: var(--blue_light);
     padding: 7px;
 }

@@ -1,5 +1,6 @@
 <template>
     <section id="team-profile">
+        <router-view></router-view>
         <h1>Equipe</h1>
         <div class="content">
             <h2 class="title-content">Joueurs</h2>

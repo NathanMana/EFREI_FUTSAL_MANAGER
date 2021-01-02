@@ -1,5 +1,6 @@
 <template>
     <section id="ranking">
+        <router-view></router-view>
         <h1>Classement</h1>
         <div class="content">
             <table class="style-table">

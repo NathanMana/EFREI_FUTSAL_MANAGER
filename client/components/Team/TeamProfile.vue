@@ -1,5 +1,6 @@
 <template>
     <section id="team-profile">
+        <router-view></router-view>
         <div class="title">
             <img src="http://placehold.it/50x50" alt="">
             <h1>Among 4es</h1>

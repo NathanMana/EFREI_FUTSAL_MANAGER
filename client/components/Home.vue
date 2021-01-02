@@ -3,12 +3,13 @@
         <router-view 
             @registration = "registration"
             @login = "login"
+            @create-team = "createTeam"
         >
         </router-view>
         <div class="left">
             <h1>EFREI Futsal Manager</h1>
             <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Ducimus consequatur quo explicabo illum molestiae perferendis delectus qui tempore a! Aperiam a veritatis maxime doloribus expedita accusamus. Odit alias nemo laudantium.</p>
-            <router-link to="/login" style="font-size:2.4em;" class="btn">Commencer</router-link>
+            <router-link :to="urlStart()" style="font-size:2.4em;" class="btn">Commencer</router-link>
             </div>
             <div class="right">
             <div class="right-decor"></div>
@@ -18,9 +19,19 @@
 
 <script>
     module.exports = {
+        props: {
+            user: Object
+        },
         data () {
             return {
-            }
+                urlStart(){
+                    if(this.user.id){
+                        return "/team/create"
+                    } else  {
+                        return "/login"
+                    }
+                }
+            } 
         },
         methods: {
             login(user){
@@ -28,6 +39,9 @@
             },
             registration(user){
                 this.$emit('registration', user)
+            },
+            createTeam(team){
+                this.$emit('create-team', team)
             }
         }
     }
