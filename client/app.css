@@ -436,7 +436,7 @@ form select {
     border-radius: 30px;
     padding: 10px 20px;
     margin-bottom: 20px;
-    background-color: var(--blue_dark);
+    background-color: var(--blue_dark);;
 }
 
 form .input-password input {
