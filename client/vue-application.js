@@ -122,6 +122,7 @@ var app = new Vue({
         },
         myPlayers: [],
         ranking: [],
+        recrutement:[],
         alert: {
             displayDOMAlert: false,
             alertMessage: "",
@@ -247,12 +248,13 @@ var app = new Vue({
                 this.user.id = 0
                 this.user.email =""
                 this.user.username = ""
-                this.user.game = 0,
-                this.user.hasRunningGame = false,
-                this.ranking = [],
-                this.myPlayers = [],
-                this.myTeam.name = "",
-                this.myTeam.image = "",
+                this.user.game = 0
+                this.user.hasRunningGame = false
+                this.ranking = []
+                this.myPlayers = []
+                this.myTeam.name = ""
+                this.myTeam.image = ""
+                this.recrutement =[]
                 this.$router.push('/')
             } catch(error){
                 this.errorMessage(error)
@@ -302,6 +304,16 @@ var app = new Vue({
             } catch(error){
                 this.errorMessage(error)
             }
-        }
+        },
+        async recrutementPage(){
+            console.log("msg")
+            try{
+                const result = await axios.get("api/recrutement")
+                this.$router.push('/play/recrutement')
+                this.recrutement = result.data
+            } catch(error){
+                this.errorMessage(error)
+            }
+        },
     }
 })

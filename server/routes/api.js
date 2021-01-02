@@ -6,7 +6,7 @@ const { Client } = require('pg')
 const client = new Client({
     user: 'postgres',
     host: 'localhost',
-    password: 'root',
+    password: 'allforone187=ken',
     database: 'EFREI_FUTSAL_MANAGER'
 })
 
@@ -418,6 +418,22 @@ router.get("/mygame", async (req,res) => {
     res.json(data)
 })
 
+//On récupère les joueurs sans équipe par défauts
+router.get("/recrutement", async (req,res) => {
+    if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
+        res.status(403).json({message: "Accès non autorisé"})
+        return
+    }
+    const players = await client.query({
+        text: 'SELECT * FROM players WHERE team_id IS NULL',
+    })
+    console.log(formateData(players))
+    res.json(formateData(players))
+
+})
+
+
+
 //fonction pour envoyer correctement les données (sans rows notamment)
 function formateData(data){
     let tabData = []
@@ -429,3 +445,5 @@ function formateData(data){
 }
 
 module.exports = router
+
+

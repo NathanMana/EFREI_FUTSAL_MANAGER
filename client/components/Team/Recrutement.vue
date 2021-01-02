@@ -4,16 +4,17 @@
         <h1>Recrutement</h1>
         <router-link :to="{ path: 'create-player'}" append class="btn el-center">Créer un joueur </router-link>  
         <div class="content">
-            <article class="article-recrutement">
-                <img src="http://placehold.it/50x50">
-                <h2 class="h2-content">Nom</h2>
+            <article class="article-recrutement" v-for="player in recrutement" :key="player.player_id">
+                <img :src="player.image" v-if="player.image">
+                <img src="http://placehold.it/50x50" v-else>
+                <h2 class="h2-content"> {{player.name}} </h2>
                 <div class="article-content">
                     <div class="article-content-item">
-                        <span class="style-rect">4/5</span>
+                        <span class="style-rect">{{player.endurance}}/5</span>
                         <span class="description">Endurance</span>
                     </div>  
                     <div class="article-content-item">
-                        <span class="style-rect">4/5</span>
+                        <span class="style-rect">{{player.grade}}/5</span>
                         <span class="description">Note générale</span>
                     </div>   
                     <h3>Prix</h3>
@@ -26,12 +27,18 @@
 
 <script>
     module.exports = {
+        props:{
+            recrutement: Array,
+        },
         data () {
             return {
             }
         },
         methods: {
-            
+            buy(){
+                let message = "Voulez-vous vraiment acheter ce joueur, cette action vous coutera " + total + " €"
+                this.$emit('display-alert', message)
+            }
         }
     }
 </script>

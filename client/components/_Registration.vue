@@ -89,7 +89,7 @@
                     this.errorPassword.state = true
                     errors = true
                 }
-
+                console.log(errors)
                 if(!errors){
                     this.$emit('registration', this.user)
                 }
