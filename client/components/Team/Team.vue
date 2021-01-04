@@ -1,78 +1,75 @@
 <template>
     <section id="team-profile">
-        <router-view></router-view>
+        <edit-team v-show="showFormTeamEdition" :myteam="myteam" @toggle-view="toggle" @edit-team="editTeam"></edit-team>
+        <div class="absolute-top__left">
+            <router-link to="/play" class="btn">Retour à l'accueil</router-link>
+        </div>
         <h1>Equipe</h1>
         <div class="content">
             <h2 class="title-content">Joueurs</h2>
-            <table class="style-table">
+            <table v-if="myplayers && myplayers.length > 0" class="style-table">
                 <tbody>
-                    <tr>
+                    <tr v-for="player in myplayers" :key="player.player_id">
                         <td>
                             <div class="content-td">
-                                <span class="style-rect">95%</span>
-                                <span class="table-content">Maxime TRAN</span>
+                                <span class="style-rect">{{player.energie}}%</span>
+                                <span class="table-content">{{player.firstname}} <span style="text-transform:uppercase;">{{player.name}}</span></span>
                             </div>
                             <div class="td-action">
                                 <div class="action-buttons">
-                                    <a>Modifier</a>
-                                    <a v-on:click="sell">Vendre</a>
-                                    <a v-on:click="fired">Licencier</a>
+                                    <a v-on:click="edit(player.player_id)">Modifier</a>
+                                    <a v-on:click="sell(player.player_id)">Vendre</a>
                                 </div>
                                 <div class="td-description">
-                                    <span>Endurance: 4/5</span>
-                                    <span>Note générale: 4/5</span>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="content-td">
-                                <span class="style-rect">95%</span>
-                                <span class="table-content">Maxime TRAN</span>
-                            </div>
-                            <div class="td-action">
-                                <div class="action-buttons">
-                                    <a href="">Modifier</a>
-                                    <a href="">Vendre</a>
-                                    <a href="">Licencier</a>
-                                </div>
-                                <div class="td-description">
-                                    <span>Endurance: 4/5</span>
-                                    <span>Note générale: 4/5</span>
+                                    <span>Endurance: {{player.endurance}}/5</span>
+                                    <span>Note générale: {{player.grade}}/5</span>
                                 </div>
                             </div>
                         </td>
                     </tr>
                 </tbody>
             </table>
+            <table class="style-table" v-else>
+                <tbody>
+                    <tr><td style="font-size:1.3em;color:#fff;text-align:center;width:100%;">Vous n'avez pas de joueur</td></tr>
+                </tbody>
+            </table>
             <div class="footer-btn">
-                <router-link to="/play/team/edit" class="btn">Modifier l'équipe</router-link>
-                <a v-on:click="deleteAccount" class="btn btn-delete">Supprimer l'équipe</a>
+                <a v-on:click="showFormTeamEdition = true" class="btn">Modifier l'équipe</a>
             </div>
         </div>
     </section>
 </template>
 
 <script>
+    const EditTeam = window.httpVueLoader('./components/Team/_EditTeam.vue')
     module.exports = {
+        components: {
+            EditTeam
+        },
+        props: {
+            myplayers: Array,
+            myteam: Object
+        },
         data () {
             return {
-
+                showFormTeamEdition:false,
             }
         },
         methods: {
-            deleteAccount(){
-                
+            toggle(){
+                this.showFormTeamEdition = false
             },
-            fired(){
-                let message = "Voulez-vous vraiment licencier ce joueur, cette action ne vous rapportera pas d'argent. Vous devriez le vendre"
-                this.$emit('display-alert', message)
+            editTeam(team){
+                this.$emit('edit-team', team)
             },
-            sell(){
+            editPlayer(player){
+                this.$emit('edit-player', player)
+            },
+            sell(playerId){
                 let total = 0;
                 let message = "Voulez-vous vraiment vendre ce joueur, cette action vous rapportera " + total + " €"
-                this.$emit('display-alert', message)
+                this.$emit('display-alert', message, playerId)
             },
         }
     }

@@ -6,7 +6,7 @@ const { Client } = require('pg')
 const client = new Client({
     user: 'postgres',
     host: 'localhost',
-    password: 'allforone187=ken',
+    password: 'root',
     database: 'EFREI_FUTSAL_MANAGER'
 })
 
@@ -301,10 +301,15 @@ router.post('/team/create', async (req, res) => {
 
     //Il faut ensuite sélectionner les joueurs (on les distribue dans les équipes aléatoirement).
     //Pour ca on doit récupérer les id des équipes controlées par l'IA
+    //Au passage on va récupérer également ici l'équipe de l'utilisateur, car on va le retourner en résultat, on va donc faire une requete au lieu de 2
     const listTeams = await client.query({
-        text: 'SELECT team_id FROM teams WHERE "isControlledByUser" = false AND game_id = $1',
+        text: 'SELECT team_id, "isControlledByUser" FROM teams WHERE game_id = $1',
         values: [req.session.user.game]
     })
+
+    //On récupère l'quipe de l'utilisateur
+    const userTeamIndex = listTeams.rows.map(c => c.isControlledByUser).indexOf(true);
+    const userTeam = listTeams.rows.splice(userTeamIndex, 1)
 
     //On récupère ensuite les gardiens et les joueurs dans la table modèle "players_models"
     const goalKeepers = await client.query({
@@ -333,8 +338,8 @@ router.post('/team/create', async (req, res) => {
         //On les ajoute a la table player
         listPlayer.forEach(async player => {
             await client.query({
-                text: 'INSERT INTO players(name, firstname, age, role, image, endurance, energie, grade, team_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-                values: [player.name, player.firstname, player.age, player.role, player.image, player.endurance, 100, player.grade, team.team_id]
+                text: 'INSERT INTO players(name, firstname, age, role, image, endurance, energie, grade, team_id, game_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+                values: [player.name, player.firstname, player.age, player.role, player.image, player.endurance, 100, player.grade, team.team_id, req.session.user.game]
             })
         })
     })
@@ -342,16 +347,16 @@ router.post('/team/create', async (req, res) => {
     //On ajoute les joueurs qui reste en free agent
     goalKeepers.rows.forEach(async goalKeeper => {
         await client.query({
-            text: 'INSERT INTO players(name, firstname, age, role, image, endurance, energie, grade, team_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, null)',
-            values: [goalKeeper.name, goalKeeper.firstname, goalKeeper.age, goalKeeper.role, goalKeeper.image, goalKeeper.endurance, 100, goalKeeper.grade]
+            text: 'INSERT INTO players(name, firstname, age, role, image, endurance, energie, grade, team_id, game_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, null, $9)',
+            values: [goalKeeper.name, goalKeeper.firstname, goalKeeper.age, goalKeeper.role, goalKeeper.image, goalKeeper.endurance, 100, goalKeeper.grade, req.session.user.game]
         })
     })
 
     players.rows.forEach(async player => {
         const endurance = randomInt(6) //Temporaire
         await client.query({
-            text: 'INSERT INTO players(name, firstname, age, role, image, endurance, energie, grade, team_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, null)',
-            values: [player.name, player.firstname, player.age, player.role, player.image, endurance, 100, player.grade]
+            text: 'INSERT INTO players(name, firstname, age, role, image, endurance, energie, grade, team_id, game_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, null, $9)',
+            values: [player.name, player.firstname, player.age, player.role, player.image, endurance, 100, player.grade, req.session.user.game]
         })
     })
 
@@ -361,10 +366,10 @@ router.post('/team/create', async (req, res) => {
         values: [req.session.user.game]
     })
 
-    //On veut envoyer simplement le tableau
+    //On envoie les données
     let ranking= formateData(rankingData)
 
-    res.json(ranking)
+    res.json({ranking, userTeam: userTeam[0]})
 
     function randomInt(max) {
         return Math.floor(Math.random() * Math.floor(max));
@@ -418,7 +423,26 @@ router.get("/mygame", async (req,res) => {
     res.json(data)
 })
 
-//On récupère les joueurs sans équipe par défauts
+/* Profil d'un club */
+router.get('/team/:idTeam', async (req,res) => {
+    if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
+        res.status(403).json({message: "Accès non autorisé"})
+        return
+    }
+
+    const idTeam = req.params.idTeam
+    
+    //On va récupérer les joueurs de l'équipe
+    const resultPlayers = await client.query({
+        text: "SELECT * FROM players WHERE team_id = $1",
+        values: [idTeam]
+    })
+
+    res.json(formateData(resultPlayers))
+
+})
+
+/* RECRUTEMENT */
 router.get("/recrutement", async (req,res) => {
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
         res.status(403).json({message: "Accès non autorisé"})
@@ -429,10 +453,154 @@ router.get("/recrutement", async (req,res) => {
     })
     console.log(formateData(players))
     res.json(formateData(players))
+})
+
+/* Modifier le nom ou l'image de notre équipe */
+router.post('/team/edit', async (req,res) => {
+    if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
+        res.status(403).json({message: "Accès non autorisé"})
+        return
+    }
+
+    const idTeam = req.body.id
+    const name = req.body.name
+    const image = req.body.image
+
+    if(!name){
+        res.status(401).json({message: "Le nom ne peut pas être vide"})
+        return
+    }
+
+    await client.query({
+        text:"UPDATE teams SET name = $1, image = $2 WHERE team_id = $3",
+        values: [name, image, idTeam]
+    })
+
+    res.json('ok')
+})
+
+/* SUPPRESSION DE LA PARTIE */
+//Supprime toutes les données d'une partie (équipes, joueurs, etc)
+router.delete("/game/delete", async (req,res) => {
+    if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
+        res.status(403).json({message: "Accès non autorisé"})
+        return
+    }
+
+    //On a juste a supprimer la partie et toutes les données liées dans les autres tables seront supprimées car nous avons sélectionné le onDelete = Cascade
+    await client.query({
+        text: "DELETE FROM games WHERE game_id = $1",
+        values: [req.session.user.game]
+    })
+
+    res.send("ok")
+})
+
+/* VENDRE UN JOUEUR */
+router.post("/player/sell", async (req,res) => {
+    if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
+        res.status(403).json({message: "Accès non autorisé"})
+        return
+    }
+
+    const idPlayer = req.body.idPlayer
+
+    //On récupère le joueur pour calculer sa valeur
+    let player = client.query({
+        text: "SELECT * FROM players WHERE player_id = $1",
+        values: [idPlayer]
+    })
+
+    player = player.rows[0]
+    
+    //On vend un joueur à une autre équipe, pour cela on va simplement sélectionner une équipe au hasard et changer le joueur d'équipe
+    const teamBuying = await client.query({
+        text: "SELECT team_id,name FROM teams ORDER BY RANDOM() LIMIT 1"
+    })
+
+    //On change le joueur d'équipe
+    await client.query({
+        text: "UPDATE players SET team_id = $1 WHERE player_id = $2",
+        values: [teamBuying.rows[0].team_id, idPlayer]
+    })
+
+    //On donne la somme d'argent à l'équipe de l'utilisateur
+    //On sélectionne l'équipe pour ajouter de l'argent au compte en banque
+    const team = await client.query({
+        text: 'SELECT cash FROM teams WHERE "isControlledByUser" = true',
+    })
+
+    let cost = team.rows[0].cash + player.endurance*2000000 + player.grade*10000000 - player.age*500000
+    await client.query({
+        text: 'UPDATE teams SET cash = $1 WHERE "isControlledByUser" = true',
+        values: [cost]
+    })
+
+    res.json(formateData(teamBuying))
 
 })
 
+/* EDITION D UN JOUEUR */
+//Si on modifie simplement le nom il n'y a pas de complication, en revanche, si on modifie la note par exemple, il va falloir payer
+router.post("/player/edit", async (req, res) => {
+    if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
+        res.status(403).json({message: "Accès non autorisé"})
+        return
+    }
 
+    const { id, grade, endurance, team_id} = req.body
+    
+    //On sélectionne le joueur en BDD
+    const playerResult = await client.query({
+        text: "SELECT * FROM players WHERE player_id = $1",
+        values: [id]
+    })
+
+    const player = playerResult.rows[0]
+
+    //On calcule les retombés ou le cout du changement
+    let cost = 0
+    if(endurance < player.endurance){
+        //On réduit l'endurance, donc on gagne de l'argent
+        cost = (player.endurance - endurance)*2000000
+    } else {
+        //Sinon on en perd
+        cost = -(player.endurance - endurance)*2000000
+    }
+
+    if(grade < player.grade){
+        //On réduit la note générale, donc on gagne de l'argent
+        cost += (player.grade - grade)*10000000
+    } else {
+        //Sinon on en perd
+        cost += -(player.grade - grade)*10000000
+    }
+
+    //On modifie le cash de l'équipe
+    const team = await client.query({
+        text: "SELECT * FROM teams WHERE team_id = $1",
+        values: [team_id]
+    })
+
+    const cash = team.rows[0].cash + cost
+    if(cash < 0){
+        //L'utilisateur n'a pas assez d'argent pour effectuer cette action
+        res.status(401).json({message: "Vous n'avez pas assez d'argent pour effectuer cette action"})
+        return
+    }
+
+    await client.query({
+        text: "UPDATE teams SET cash = $1 WHERE team_id = $2",
+        values: [cash, team_id]
+    })
+
+    //Dans tous les cas on modifie le joueur
+    await client.query({
+        text: "UPDATE players SET grade = $3, endurance = $4"
+    })
+
+    res.send('ok')
+})
 
 //fonction pour envoyer correctement les données (sans rows notamment)
 function formateData(data){

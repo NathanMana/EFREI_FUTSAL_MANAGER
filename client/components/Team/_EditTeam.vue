@@ -3,11 +3,12 @@
         <article>
             <div class="article__title">
                 <h2>Modifier l'équipe</h2>
-                <i v-on:click="redirection" class="fas fa-times icon-close"></i>
+                <i v-on:click="toggle" class="fas fa-times icon-close"></i>
             </div>
             <form @submit.prevent="editTeam">
-                <input v-model="team.name" type="text" placeholder="Nom de l'équipe">
-                <input v-model="team.image" type="text" placeholder="Lien vers l'image" name="" id="">
+                <div v-show="error.state" class="error">{{error.message}}</div>
+                <input v-model="myteam.name" type="text" placeholder="Nom de l'équipe">
+                <input v-model="myteam.image" type="text" placeholder="Lien vers l'image" name="" id="">
                 <button class="btn" type="submit">Modifier</button>
             </form>
         </article>
@@ -16,20 +17,32 @@
 
 <script>
     module.exports = {
+        props: {
+            myteam: Object
+        },
         data () {
             return {
-                team: {
-                    name: "",
-                    image: "",
+                error:  {
+                    message: "",
+                    state: false
                 }
             }
         },
         methods: {
-            editTeam(){
-                this.$emit('editTeam', this.team)
+            toggle(){
+                this.$emit('toggle-view', false)
             },
-            redirection(){
-                router.back()
+            editTeam(){
+                this.error.state = false
+                if(!this.myteam.name){
+                    this.error.message = "Le nom ne peut pas être vide"
+                    this.error.state = true
+                }
+
+                if(!this.error.state){
+                    this.toggle()
+                    this.$emit('edit-team', this.myteam)
+                }
             }
         }
     }

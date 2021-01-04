@@ -1,38 +1,35 @@
 <template>
     <section id="team-profile">
         <router-view></router-view>
+        <div class="absolute-top__left">
+            <router-link to="/play" class="btn">Retour à l'accueil</router-link>
+        </div>
         <div class="title">
-            <img src="http://placehold.it/50x50" alt="">
-            <h1>Among 4es</h1>
+            <img v-if="teamprofile.image" :src="teamprofile.image" alt="">
+            <img v-else src="http://placehold.it/20x20" alt="">
+            <h1>{{teamprofile.name}}</h1>
         </div>
         <div class="content">
             <h2 class="title-content">Joueurs</h2>
-            <table class="style-table">
+            <table v-if="teamprofile.players.length > 0" class="style-table">
                 <tbody>
-                    <tr>
+                    <tr v-for="player in teamprofile.players" :key="player.player_id">
                         <td>
                             <div class="content-td">
-                                <span class="style-rect">95%</span>
-                                <span class="table-content">Maxime TRAN</span>
+                                <span class="style-rect">{{player.energie}}%</span>
+                                <span class="table-content">{{player.firstname}} <span style="text-transform:uppercase;">{{player.name}}</span></span>
                             </div>
                             <div class="td-action">
-                                <span>Endurance: 4/5</span>
-                                <span>Note générale: 4/5</span>
+                                <span>Endurance: {{player.endurance}}/5</span>
+                                <span>Note générale: {{player.grade}}/5</span>
                             </div>
                         </td>
                     </tr>
-                    <tr>
-                        <td>
-                            <div class="content-td">
-                                <span class="style-rect">95%</span>
-                                <span class="table-content">Maxime TRAN</span>
-                            </div>
-                            <div class="td-action">
-                                <span>Endurance: 4/5</span>
-                                <span>Note générale: 4/5</span>
-                            </div>
-                        </td>
-                    </tr>
+                </tbody>
+            </table>
+            <table v-else class="style-table">
+                <tbody>
+                    <tr><td>Vous n'avez pas de joueur</td></tr>
                 </tbody>
             </table>
         </div>
@@ -41,6 +38,9 @@
 
 <script>
     module.exports = {
+        props: {
+            teamprofile: Object
+        },
         data () {
             return {
 
