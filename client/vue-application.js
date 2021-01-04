@@ -117,6 +117,7 @@ var app = new Vue({
         myPlayers: [],
         ranking: [],
         teamProfile: {},
+        recrutement:[],
         alert: {
             displayDOMAlert: false,
             alertMessage: "",
@@ -258,6 +259,7 @@ var app = new Vue({
                 this.displaySuccess(`Bienvenue ${this.user.username}`)
             } 
             catch(error){
+                console.log(error)
                 this.errorMessage(error)
             }
         },
@@ -279,7 +281,7 @@ var app = new Vue({
                 this.myTeam.id = 0
                 this.myTeam.cash = "0"
                 this.ranking = []
-
+                this.recrutement =[]
                 this.$router.push('/')
             } catch(error){
                 this.errorMessage(error)
@@ -382,13 +384,23 @@ var app = new Vue({
                 this.errorMessage(error)
             }
         },
+        async recrutementPage(){
+            try{
+                const result = await axios.get("api/recrutement")
+                this.$router.push('/play/recrutement')
+                this.recrutement = result.data
+            } catch(error){
+                this.errorMessage(error)
+            }
+        },
         async sellPlayer(idPlayer){
             try{
                 const result = await axios.post("/api/player/sell", idPlayer)
                 var indexPlayer = this.myTeam.players.map(c => c.player_id).indexOf(idPlayer)
                 this.myTeam.players.splice(indexPlayer, 1)
                 this.displaySuccess(`Joueur vendu à ${result.data.name}`)
-            } catch(error){
+            }
+            catch(error){
                 this.errorMessage(error)
             }
         },

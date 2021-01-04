@@ -18,7 +18,6 @@ html, body {
     margin:0;
     padding: 0;
     background: center / cover no-repeat url(images/frontend/background.png) var(--blue_dark);
-    position: fixed;
     height: 100%;
 }
 
@@ -464,7 +463,7 @@ form select {
     border-radius: 30px;
     padding: 10px 20px;
     margin-bottom: 20px;
-    background-color: var(--blue_dark);
+    background-color: var(--blue_dark);;
 }
 
 form .input-password input {

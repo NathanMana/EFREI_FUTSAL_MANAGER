@@ -46,7 +46,7 @@
               <li class="nav-play-li"><router-link to='/play/team'>Equipe</router-link></li>
               <li class="nav-play-li"><router-link to='/play/training'>Entraînement</router-link></li>
               <li class="nav-play-li"><router-link to='/play/ranking'>Classement</router-link></li>
-              <li class="nav-play-li"><a>Recrutement</a></li>
+              <li class="nav-play-li"><a v-on:click="recrutementPage">Recrutement</a></li>
               <li class="nav-play-li"><router-link to='/account'>Mon compte</router-link></li>
               <li v-on:click="toggleMenu" id="menu-responsive"><div class="point"></div><div class="point"></div><div class="point"></div></li>
             </ul>
@@ -73,7 +73,7 @@
                 <li class="nav-play-li"><router-link to='/play/team'>Equipe</router-link></li>
                 <li class="nav-play-li"><router-link to='/play/training'>Entraînement</router-link></li>
                 <li class="nav-play-li"><router-link to='/play/ranking'>Classement</router-link></li>
-                <li class="nav-play-li"><router-link to='/play/recrutement'>Recrutement</router-link></li>
+                <li class="nav-play-li"><a v-on:click="recrutementPage">Recrutement</a></li>
                 <li class="nav-play-li"><router-link to='/account'>Mon compte</router-link></li>
               </ul>
               <ul>
@@ -88,6 +88,7 @@
                :ranking = "ranking"
                :myteam = "myTeam"
                :teamprofile = "teamProfile"
+               :recrutement = "recrutement"
                @display-alert="displayAlert"
                @registration="registration"
                @login = "login"

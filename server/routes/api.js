@@ -442,6 +442,19 @@ router.get('/team/:idTeam', async (req,res) => {
 
 })
 
+/* RECRUTEMENT */
+router.get("/recrutement", async (req,res) => {
+    if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
+        res.status(403).json({message: "Accès non autorisé"})
+        return
+    }
+    const players = await client.query({
+        text: 'SELECT * FROM players WHERE team_id IS NULL',
+    })
+    console.log(formateData(players))
+    res.json(formateData(players))
+})
+
 /* Modifier le nom ou l'image de notre équipe */
 router.post('/team/edit', async (req,res) => {
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
@@ -600,3 +613,5 @@ function formateData(data){
 }
 
 module.exports = router
+
+
