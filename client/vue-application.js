@@ -306,7 +306,6 @@ var app = new Vue({
             }
         },
         async recrutementPage(){
-            console.log("msg")
             try{
                 const result = await axios.get("api/recrutement")
                 this.$router.push('/play/recrutement')
