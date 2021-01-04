@@ -18,6 +18,8 @@ html, body {
     margin:0;
     padding: 0;
     background: center / cover no-repeat url(images/frontend/background.png) var(--blue_dark);
+    position: fixed;
+    height: 100%;
 }
 
 a {
@@ -187,7 +189,7 @@ ul {
     width: 90%;
     left:5%;
     z-index: 15;
-    animation: success-fade 6s forwards;
+    animation: success-fade 3s forwards;
     text-transform: uppercase;
     font-size: 1.1em;
     opacity: 0;
@@ -221,6 +223,7 @@ nav {
     align-items: center;
     z-index: 11;
     position: relative;
+    height: 5rem;
 }
 
 nav a.title {
@@ -291,6 +294,7 @@ aside {
     z-index: 20;
     transform: translateX(100%);
     transition: 0.3s ease-out;
+    display: none;
 }
 
 aside.open {
@@ -339,6 +343,9 @@ aside nav ul li a {
     #menu-responsive {
         display: initial;
     }
+    aside {
+        display: block;
+    }
 }
 
 @media screen and (max-width: 653px){
@@ -353,6 +360,27 @@ aside nav ul li a {
 h1.title {
     font-size: 1.5em;
 }
+
+.absolute-top__left {
+    position: absolute;
+    top: 100px;
+    left: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.absolute-top__right {
+    position: absolute;
+    top: 5rem;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
 
 /* OVERLAY */
 section.overlay {
@@ -521,11 +549,22 @@ form select option {
     margin: 15px;
     width: 80px;
     height: 80px;
-    border-radius: 50%;
     object-fit: contain;
 }
 
 .title h1 {
     margin: 0;
     width: fit-content;
+}
+
+#cash {
+    width:-webkit-fit-content;
+    width:-moz-fit-content;
+    width: fit-content;
+    background:var(--blue_light);
+    color:var(--white);
+    z-index: 100;
+    padding: 12px;
+    font-weight: 600;
+    font-size: 1.32em;
 }

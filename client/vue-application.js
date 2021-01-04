@@ -16,7 +16,6 @@ const Recrutement = window.httpVueLoader('./components/Team/Recrutement.vue')
 const CreatePlayer = window.httpVueLoader('./components/Team/_CreatePlayer.vue')
 const EditPlayer = window.httpVueLoader('./components/Team/_EditPlayer.vue')
 const Team = window.httpVueLoader('./components/Team/Team.vue')
-const EditTeam = window.httpVueLoader('./components/Team/_EditTeam.vue')
 const Training = window.httpVueLoader('./components/Team/Training.vue')
 
 
@@ -25,14 +24,7 @@ const children = [
         path: 'play/simulation',
         component: Simulation
     },
-    {
-        path: 'play/team/player/edit/:id',
-        component: EditPlayer
-    },
-    {
-        path: 'play/team/edit',
-        component: EditTeam
-    },
+    
 ]
 
 
@@ -97,8 +89,7 @@ const routes = [
     },
     { 
         path: '/play/team', 
-        component: Team, 
-        children
+        component: Team
     }
 ]
 
@@ -118,10 +109,14 @@ var app = new Vue({
         },
         myTeam: {
             name: "",
-            image: ""
+            image: "",
+            players: [],
+            id: 0,
+            cash: 0
         },
         myPlayers: [],
         ranking: [],
+        teamProfile: {},
         alert: {
             displayDOMAlert: false,
             alertMessage: "",
@@ -153,9 +148,26 @@ var app = new Vue({
                 this.myPlayers = resultGame.data.players
                 this.myTeam.name = resultGame.data.myTeam.name
                 this.myTeam.image = resultGame.data.myTeam.image
+                this.myTeam.id = resultGame.data.myTeam.team_id
+                this.myTeam.cash = resultGame.data.myTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+            }
+
+            //Si on recharge la page /play/team/:id, i lfaut  etre capable de récupérer les informations
+            const decomposedURL = window.location.href.split('/')
+            //Pas le choix de décomposer car cette page ne doit pas être confondue avec /play/team
+            if(decomposedURL.length === 7 && decomposedURL[4] === "play" && decomposedURL[5] === "team" && decomposedURL[6].length > 0){
+                const result = await axios.get("/api/team/" + decomposedURL[6])
+                const team = this.ranking.find(c => c.team_id == decomposedURL[6])
+                const obj = {
+                    name: team.name,
+                    image: team.image,
+                    players: result.data
+                }
+                this.teamProfile = obj
             }
         }
         catch(error){
+            console.log(error)
             if(window.location.href != "http://localhost:3000/#/"){
                 this.$router.push('/')
             }
@@ -171,7 +183,7 @@ var app = new Vue({
             setTimeout(() => {
                 this.success.state = false
                 this.success.message = ""
-            }, 7000)
+            }, 4000)
         },
         cancelAlert(){
             this.alert.displayDOMAlert = false
@@ -188,6 +200,12 @@ var app = new Vue({
             switch (nameAction){
                 case 'delete-account':
                     this.deleteAccount()
+                    break;
+                case "delete-game":
+                    this.deleteGame()
+                    break;
+                case "sell-player":
+                    this.sellPlayer(data)
                     break;
             }
         },
@@ -228,8 +246,10 @@ var app = new Vue({
                     const resultGame = await axios.get("/api/mygame")
                     this.ranking = resultGame.data.ranking
                     this.myPlayers = resultGame.data.players
+                    this.myTeam.id = resultGame.data.myTeam.team_id
                     this.myTeam.name = resultGame.data.myTeam.name
                     this.myTeam.image = resultGame.data.myTeam.image
+                    this.myTeam.cash = resultGame.data.myTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
                     this.$router.push('/play/')
                 } else {
                     this.$router.push('/team/create')
@@ -244,15 +264,22 @@ var app = new Vue({
         async logout(){
             try {
                 await axios.get("/api/logout")
+
+                //On remet toutes les données à l'état initial
                 this.user.id = 0
                 this.user.email =""
                 this.user.username = ""
-                this.user.game = 0,
-                this.user.hasRunningGame = false,
-                this.ranking = [],
-                this.myPlayers = [],
-                this.myTeam.name = "",
-                this.myTeam.image = "",
+                this.user.game = 0
+                this.user.hasRunningGame = false
+                this.ranking = []
+                this.myPlayers = []
+                this.myTeam.name = ""
+                this.myTeam.image = ""
+                this.myTeam.players = []
+                this.myTeam.id = 0
+                this.myTeam.cash = "0"
+                this.ranking = []
+
                 this.$router.push('/')
             } catch(error){
                 this.errorMessage(error)
@@ -293,12 +320,85 @@ var app = new Vue({
         async createTeam(team){
             try{
                 const result = await axios.post("/api/team/create", team)
-                this.ranking = result.data
+                this.ranking = result.data.ranking
                 this.myTeam.name = team.name
                 this.myTeam.image = team.image
+                this.myTeam.id = result.data.userTeam.team_id
+                this.myTeam.cash = result.data.myTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
                 this.user.hasRunningGame = true
                 this.displaySuccess('Partie créée !')
                 this.$router.push('/play')
+            } catch(error){
+                this.errorMessage(error)
+            }
+        },
+        async getClubProfile(idClub){
+            if(idClub != this.myTeam.id){
+                try{
+                    const result = await axios.get("/api/team/" + idClub)
+                    const team = this.ranking.find(c => c.team_id === idClub)
+                    const obj = {
+                        name: team.name,
+                        image: team.image,
+                        players: result.data
+                    }
+                    this.teamProfile = obj
+                    this.$router.push('/play/team/'+idClub)
+                } catch(error){
+                    this.errorMessage(error)
+                }
+            }
+        },
+        async editTeam(team){
+            try{
+                await axios.post("/api/team/edit", team)
+                this.myTeam.name = team.name
+                this.myTeam.image = team.image
+                const idTeamInRanking = this.ranking.map(e => e.team_id).indexOf(team.id)
+                this.ranking[idTeamInRanking].name = team.name
+                this.ranking[idTeamInRanking].image = team.image
+                this.displaySuccess('Modification bien enregistrée !')
+            } catch(error){
+                this.errorMessage(error)
+            }
+        },
+        async deleteGame(){
+            try{
+                await axios.delete("/api/game/delete")
+                this.user.game = 0
+                this.user.hasRunningGame = false
+                this.ranking = []
+                this.myPlayers = []
+                this.myTeam.name = ""
+                this.myTeam.image = ""
+                this.myTeam.players = []
+                this.myTeam.id = 0
+                this.myTeam.cash = "0"
+                this.user.hasRunningGame = false
+                this.ranking = []
+                this.$router.push('/')
+                this.displaySuccess('La partie a bien été supprimée')
+            } catch(error){
+                this.errorMessage(error)
+            }
+        },
+        async sellPlayer(idPlayer){
+            try{
+                const result = await axios.post("/api/player/sell", idPlayer)
+                var indexPlayer = this.myTeam.players.map(c => c.player_id).indexOf(idPlayer)
+                this.myTeam.players.splice(indexPlayer, 1)
+                this.displaySuccess(`Joueur vendu à ${result.data.name}`)
+            } catch(error){
+                this.errorMessage(error)
+            }
+        },
+        async editPlayer(player){
+            try{
+                const result = await axios.post("/api/player/edit", player)
+                var indexPlayer = this.myTeam.players.map(c => c.player_id).indexOf(player.player_id)
+                this.myTeam.players[indexPlayer] = player
+                this.myTeam.cash = result.data.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+                this.displaySuccess(`Joueur vendu à ${result.data.name}`)
             } catch(error){
                 this.errorMessage(error)
             }

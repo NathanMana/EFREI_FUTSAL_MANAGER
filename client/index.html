@@ -40,13 +40,13 @@
               <li><router-link :to="{ path: 'registration'}" append>S'inscrire</router-link ></li>
             </ul>
           </nav>
-          <nav id="nav-connected" v-else>
+          <nav id="nav-connected" v-else-if="user.id && user.hasRunningGame">
             <ul>
               <li><router-link to='/play/simulation' id="nav-play">Passer à la semaine suivante</router-link></li>
               <li class="nav-play-li"><router-link to='/play/team'>Equipe</router-link></li>
               <li class="nav-play-li"><router-link to='/play/training'>Entraînement</router-link></li>
               <li class="nav-play-li"><router-link to='/play/ranking'>Classement</router-link></li>
-              <li class="nav-play-li"><router-link to='/play/recrutement'>Recrutement</router-link></li>
+              <li class="nav-play-li"><a>Recrutement</a></li>
               <li class="nav-play-li"><router-link to='/account'>Mon compte</router-link></li>
               <li v-on:click="toggleMenu" id="menu-responsive"><div class="point"></div><div class="point"></div><div class="point"></div></li>
             </ul>
@@ -54,6 +54,13 @@
               <li><a id="logout" v-on:click="logout">Déconnexion</a></li>
             </ul>
           </nav>
+          <nav v-else>
+            <router-link to='/' class="title">EFREI Futsal Manager</router-link>
+            <ul>
+              <li><a id="logout" v-on:click="logout">Déconnexion</a></li>
+            </ul>
+          </nav>
+          <div v-if="user.hasRunningGame" class="absolute-top__right"><div id="cash">{{myTeam.cash}} €</div></div>
           <aside :class="{ 'open' : stateMenu }">
             <nav v-if="!user.id">
               <ul>
@@ -77,9 +84,10 @@
           <main>   
             <router-view
                :user="user"
-               :players= "myPlayers"
+               :myplayers= "myPlayers"
                :ranking = "ranking"
-               :team = "myTeam"
+               :myteam = "myTeam"
+               :teamprofile = "teamProfile"
                @display-alert="displayAlert"
                @registration="registration"
                @login = "login"
@@ -87,6 +95,9 @@
                @edit-password = "editPassword"
                @delete-account = "deleteAccount"
                @create-team = "createTeam"
+               @get-club-profile = "getClubProfile"
+               @edit-team = "editTeam"
+               @edit-player = "editPlayer"
             >
             </router-view>
           </main>

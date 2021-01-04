@@ -1,6 +1,8 @@
 <template>
     <section id="ranking">
-        <router-view></router-view>
+        <div class="absolute-top__left">
+            <router-link to="/play" class="btn">Retour à l'accueil</router-link>
+        </div>
         <h1>Classement</h1>
         <div class="content">
             <table class="style-table">
@@ -12,15 +14,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-on:click="teamProfile(1)">
-                        <td><span class="style-rect">1</span></td>
-                        <td>30</td>
-                        <td>Les licornes de Maurepas</td>
-                    </tr>
-                    <tr>
-                        <td><span class="style-rect">1</span></td>
-                        <td>30</td>
-                        <td>Les licornes de Maurepas</td>
+                    <tr v-on:click="getClubProfile(team.team_id)" v-for="(team, index) in ranking" :key="team.team_id">
+                        <td><span class="style-rect">{{index + 1}}</span></td>
+                        <td>{{team.points}}</td>
+                        <td> 
+                            <div class="td-content">
+                                {{team.name}}
+                                <img class="img-td" v-if="team.image" :src="team.image" alt="">
+                                <img class="img-td" v-else src="http://placehold.it/20x20" alt="">      
+                            </div>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -30,13 +33,16 @@
 
 <script>
     module.exports = {
+        props: {
+            ranking:Array
+        },
         data () {
             return {
             }
         },
         methods: {
-            teamProfile(idTeam){
-                window.location.href = "/#/play/team/" + idTeam;
+            getClubProfile(id){
+                this.$emit('get-club-profile', id)
             }
         }
     }
@@ -74,6 +80,18 @@
 
     table.style-table tbody tr span {
         display: block;
+    }
+
+    .img-td {
+        width: 30px;
+        height: 30px;
+        object-fit: contain;
+        vertical-align: middle;
+    }
+
+    .td-content {
+        display: block;
+        padding: 8px 0;
     }
 
 </style>

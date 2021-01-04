@@ -2,15 +2,15 @@
     <section id="home-team">
         <router-view></router-view>
         <div class="title">
-            <img v-if="team.image" :src="team.image" alt="">
-            <h1>{{team.name}}</h1>
+            <img v-if="myteam.image" :src="myteam.image" alt="">
+            <h1>{{myteam.name}}</h1>
         </div>
         <div class="content">
             <div class="content-element" id="classement">
                 <h2 class="h2-table">Classement</h2>
                 <table>
                     <tbody>
-                        <tr v-for="(team, index) in ranking" :key="team.team_id">
+                        <tr v-for="(team, index) in ranking" :key="team.team_id" v-on:click="getClubProfile(team.team_id)">
                             <td>
                                 <span>{{index + 1}} - </span>
                                 <img v-if="team.image" :src="team.image" alt="">
@@ -23,9 +23,9 @@
             </div>
             <div class="content-element" id="forme">
                 <h2 class="h2-table">Etat de forme des joueurs</h2>
-                <table v-if="players.length > 0" class="style-table">
+                <table v-if="myplayers.length > 0" class="style-table">
                     <tbody>
-                        <tr v-for="player in players" :key="player.player_id">
+                        <tr v-for="player in myplayers" :key="player.player_id">
                             <td>
                                 <span class="style-rect">{{player.energie}}</span>
                                 <span class="table-content">{{player.firstname}} <span style="text-transform:uppercase;">{{player.name}}</span></span>
@@ -45,15 +45,17 @@
     module.exports = {
         props: {
             ranking: Array,
-            players: Array,
-            team: Object
+            myplayers: Array,
+            myteam: Object
         },
         data () {
             return {
             }
         },
         methods: {
-            
+            getClubProfile(id){
+                this.$emit('get-club-profile', id)
+            }
         }
     }
 </script>
@@ -67,7 +69,7 @@
     }
     
     #classement td img {
-        border-radius: 50%;
+        object-fit: contain;
         width: 20px;
         height: 20px;
     }

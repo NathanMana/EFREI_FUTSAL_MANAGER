@@ -14,6 +14,7 @@
 
         <div class="footer-btn">
             <router-link to="/account/password/edit" class="btn">Modifier le mot de passe</router-link>
+            <a v-on:click="deleteGame" class="btn btn-delete">Supprimer la partie</a>
             <a v-on:click="deleteAccount" class="btn btn-delete">Supprimer le compte</a>
         </div>
     </section>
@@ -47,6 +48,10 @@
             deleteAccount(){
                 let message = "Voulez-vous vraiment supprimer votre compte. Cette action est irrévocable et entrainera la perte de toutes vos données"
                 this.$emit('display-alert', message, "delete-account")
+            },
+            deleteGame(){
+                let message = "Voulez-vous vraiment supprimer la partie. Cette action entrainera la suppression de toutes les données et vous ne pourrez pas faire machine arrière"
+                this.$emit('display-alert', message, "delete-game")
             }
         }
     }
