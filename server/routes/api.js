@@ -6,7 +6,7 @@ const { Client } = require('pg')
 const client = new Client({
     user: 'postgres',
     host: 'localhost',
-    password: 'root',
+    password: 'allforone187=ken',
     database: 'EFREI_FUTSAL_MANAGER'
 })
 
@@ -602,6 +602,50 @@ router.post("/player/edit", async (req, res) => {
     res.send('ok')
 })
 
+
+//fonction de l'achat de joueur
+
+router.post("/player/buy", async (req,res)=>{
+    if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
+        res.status(403).json({message: "Accès non autorisé"})
+        return
+    }
+    console.log(req.body)
+    const id_player = req.body.player
+    const team = await client.query({
+        text: 'SELECT * FROM teams WHERE "isControlledByUser" = true AND game_id=$1',
+        values:[req.session.user.game]
+    })
+    //On change l'équipe du joueur qu'on vient d'acheter
+    await client.query({
+        text: "UPDATE players SET team_id=$1 WHERE player_id = $2",
+        values:[team.rows[0].team_id, id_player]
+        
+    })
+    //On récupère le joueur qu'on veut acheter
+    const player_result = await client.query({
+        text: "SELECT * FROM players WHERE player_id = $1",
+        values:[id_player]
+    })
+
+    const player = player_result.rows[0]
+
+    //Calcul nouveau prix de notre équipe
+    let price = team.rows[0].cash - (player.endurance * 2000000 + player.grade * 10000000 - player.age * 500000)
+
+    if (price < 0){
+        res.status(401).json({message:"Vous n'avez pas assez d'argent"})
+        return
+    }
+
+    await client.query({
+        text: "UPDATE teams SET cash=$1 WHERE team_id = $2",
+        values:[price, team.rows[0].team_id]
+    })
+
+    res.json(price)
+})
+
 //fonction pour envoyer correctement les données (sans rows notamment)
 function formateData(data){
     let tabData = []
@@ -611,6 +655,8 @@ function formateData(data){
 
     return tabData
 }
+
+
 
 module.exports = router
 

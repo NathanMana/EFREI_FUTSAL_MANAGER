@@ -16,9 +16,9 @@
                     <div class="article-content-item">
                         <span class="style-rect">{{player.grade}}/5</span>
                         <span class="description">Note générale</span>
-                    </div>   
+                    </div>
                     <h3>Prix</h3>
-                    <button>Acheter</button>
+                    <button v-on:click="buyPlayer(player.player_id)">Acheter</button>
                 </div>    
             </article>
         </div>
@@ -35,9 +35,8 @@
             }
         },
         methods: {
-            buy(){
-                let message = "Voulez-vous vraiment acheter ce joueur, cette action vous coutera " + total + " €"
-                this.$emit('display-alert', message)
+            buyPlayer(player_id){          
+                this.$emit('buy-player', player_id)
             }
         }
     }
