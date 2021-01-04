@@ -18,7 +18,7 @@
                         <span class="description">Note générale</span>
                     </div>
                     <h3>Prix</h3>
-                    <button class="btn" type="submit" v-on:click="buyPlayer">Acheter</button>
+                    <button v-on:click="buyPlayer(player.player_id)">Acheter</button>
                 </div>    
             </article>
         </div>
@@ -35,8 +35,8 @@
             }
         },
         methods: {
-            buyPlayer(player_id){
-                this.$emit('buyPlayer', player_id)
+            buyPlayer(player_id){          
+                this.$emit('buy-player', player_id)
             }
         }
     }

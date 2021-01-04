@@ -414,6 +414,22 @@ var app = new Vue({
             } catch(error){
                 this.errorMessage(error)
             }
-        }
+        },
+
+        async buyPlayer(player_id){
+            try{
+                const data = {player:player_id}
+                const result = await axios.post("/api/player/buy", data)
+                var indexPlayer = this.recrutement.map(c => c.player_id).indexOf(player_id)
+                this.recrutement.splice(indexPlayer, 1)
+                this.displaySuccess(`Achat réussi`)
+                this.myTeam.cash = result.data
+            } catch(error){
+                this.errorMessage(error)
+            }
+
+        },
+
+        
     }
 })
