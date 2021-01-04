@@ -326,11 +326,12 @@ var app = new Vue({
                 this.myTeam.name = team.name
                 this.myTeam.image = team.image
                 this.myTeam.id = result.data.userTeam.team_id
-                this.myTeam.cash = result.data.myTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+                this.myTeam.cash = result.data.userTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
                 this.user.hasRunningGame = true
                 this.displaySuccess('Partie créée !')
                 this.$router.push('/play')
             } catch(error){
+                console.log(error)
                 this.errorMessage(error)
             }
         },

@@ -303,7 +303,7 @@ router.post('/team/create', async (req, res) => {
     //Pour ca on doit récupérer les id des équipes controlées par l'IA
     //Au passage on va récupérer également ici l'équipe de l'utilisateur, car on va le retourner en résultat, on va donc faire une requete au lieu de 2
     const listTeams = await client.query({
-        text: 'SELECT team_id, "isControlledByUser" FROM teams WHERE game_id = $1',
+        text: 'SELECT team_id, "isControlledByUser", cash FROM teams WHERE game_id = $1',
         values: [req.session.user.game]
     })
 
