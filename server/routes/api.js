@@ -646,6 +646,44 @@ router.post("/player/buy", async (req,res)=>{
     res.json(price)
 })
 
+//fonction pour créer un joueur
+
+router.post("/player/create", async (req,res)=>{
+    if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
+        res.status(403).json({message: "Accès non autorisé"})
+        return
+    }
+    const { name,firstName,age,poste,endurance,note } = req.body
+
+    const team = await client.query({
+        text: 'SELECT * FROM teams WHERE "isControlledByUser" = true AND game_id=$1',
+        values:[req.session.user.game]
+    })
+
+    //Calcul nouveau prix de notre équipe
+    let price = team.rows[0].cash - (endurance * 2000000 + note * 10000000 - age * 500000)
+
+    if (price < 0){
+        res.status(401).json({message:"Vous n'avez pas assez d'argent pour créer ce joueur"})
+        return
+    }
+
+
+    //On ajoute notre nouveau joueur à notre équipe
+    await client.query({
+        text: "INSERT INTO players(name,firstName,age,role,endurance,grade,team_id, game_id, energie) VALUES($1,$2,$3,$4,$5,$6,$7,$8,100)",
+        values:[name,firstName,age,poste,endurance,note , team.rows[0].team_id, req.session.user.game]
+    })
+    
+
+    await client.query({
+        text: "UPDATE teams SET cash=$1 WHERE team_id = $2",
+        values:[price, team.rows[0].team_id]
+    })
+
+    res.json(price)
+})
+
 //fonction pour envoyer correctement les données (sans rows notamment)
 function formateData(data){
     let tabData = []
@@ -655,6 +693,8 @@ function formateData(data){
 
     return tabData
 }
+
+
 
 
 

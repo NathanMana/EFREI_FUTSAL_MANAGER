@@ -5,7 +5,7 @@
                 <h2>Créer un joueur</h2>
                 <i v-on:click="redirection" class="fas fa-times icon-close"></i>
             </div>
-            <form @submit.prevent="login">
+            <form @submit.prevent="create_player">
                 <div class="form-colonne">
                     <input v-model="player.name" type="text" placeholder="Nom">
                     <input v-model="player.age" type="number" placeholder="Age">
@@ -16,8 +16,7 @@
                     <select  v-model="player.poste">
                         <option value="" disabled selected>Poste</option>
                         <option value="1"> Gardien </option>
-                        <option value="2"> Attaquant </option>
-                        <option value="3"> Défenseur </option>
+                        <option value="2"> Joueur </option>
                     </select>
                     <input v-model="player.note" type="number" placeholder="Note">  
                 </div> 
@@ -33,7 +32,7 @@
             return {
                 player: {
                     name: "",
-                    first_name: "",
+                    firstName: "",
                     age: "",
                     poste:"",
                     endurance: "",
@@ -43,7 +42,7 @@
         },
         methods: {
             create_player(){
-                this.$emit('create_player', this.player)
+                this.$emit('create-player', this.player)
             },
             redirection(){
                 router.back()

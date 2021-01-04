@@ -430,6 +430,16 @@ var app = new Vue({
             }
 
         },
+        async createPlayer(player){
+            console.log(player)
+            try{
+                const result = await axios.post("/api/player/create", player)
+
+            } catch(error){
+                console.log(error)
+                this.errorMessage(error)
+            }
+        }
 
         
     }

@@ -1,6 +1,8 @@
 <template>
     <section id="recrutement">
-        <router-view></router-view>
+        <router-view @create-player = "createPlayer">
+            
+        </router-view>
         <h1>Recrutement</h1>
         <router-link :to="{ path: 'create-player'}" append class="btn el-center">Créer un joueur </router-link>  
         <div class="content">
@@ -37,7 +39,11 @@
         methods: {
             buyPlayer(player_id){          
                 this.$emit('buy-player', player_id)
-            }
+            },
+            createPlayer(player){
+                this.$emit('create-player', player)
+            },
+
         }
     }
 </script>
