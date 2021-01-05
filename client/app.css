@@ -383,7 +383,7 @@ h1.title {
 
 /* OVERLAY */
 section.overlay {
-    position: absolute;
+    position: fixed;
     top: 0;
     background: rgba(0, 0, 0, 0.68);
     left: 0;
@@ -464,6 +464,16 @@ form select {
     padding: 10px 20px;
     margin-bottom: 20px;
     background-color: var(--blue_dark);;
+}
+
+form label {
+    width: 100%;
+    text-align: left;
+    color: var(--white);
+    font-size: 1.5em;
+    padding-left: 20px;
+    font-style: italic;
+    margin-top: 10px;
 }
 
 form .input-password input {

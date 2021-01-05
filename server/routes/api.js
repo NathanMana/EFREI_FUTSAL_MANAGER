@@ -6,7 +6,7 @@ const { Client } = require('pg')
 const client = new Client({
     user: 'postgres',
     host: 'localhost',
-    password: 'allforone187=ken',
+    password: 'root',
     database: 'EFREI_FUTSAL_MANAGER'
 })
 
@@ -379,6 +379,7 @@ router.post('/team/create', async (req, res) => {
 /* RECUPERER DES INFORMATIONS SUR LA PARTIE EN COURS */
 //On récupère le classement (docn toutes les équipes)
 //Les joueurs de notre équipe
+//Le contenu de la page recrutement
 router.get("/mygame", async (req,res) => {
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
         res.status(403).json({message: "Accès non autorisé"})
@@ -414,10 +415,17 @@ router.get("/mygame", async (req,res) => {
     })
     const players = formateData(playersData)
 
+    //On récupere les joueurs sans équipe
+    const playersFreeData = await client.query({
+        text: 'SELECT * FROM players WHERE team_id IS NULL'
+    })
+    const playersFree = formateData(playersFreeData)
+
     const data = {
         ranking,
         myTeam,
-        players
+        players,
+        playersFree
     }
 
     res.json(data)
@@ -451,7 +459,6 @@ router.get("/recrutement", async (req,res) => {
     const players = await client.query({
         text: 'SELECT * FROM players WHERE team_id IS NULL',
     })
-    console.log(formateData(players))
     res.json(formateData(players))
 })
 
@@ -506,37 +513,37 @@ router.post("/player/sell", async (req,res) => {
     const idPlayer = req.body.idPlayer
 
     //On récupère le joueur pour calculer sa valeur
-    let player = client.query({
+    let playerResult = await client.query({
         text: "SELECT * FROM players WHERE player_id = $1",
         values: [idPlayer]
     })
 
-    player = player.rows[0]
+    const player = playerResult.rows[0]
     
     //On vend un joueur à une autre équipe, pour cela on va simplement sélectionner une équipe au hasard et changer le joueur d'équipe
     const teamBuying = await client.query({
-        text: "SELECT team_id,name FROM teams ORDER BY RANDOM() LIMIT 1"
+        text: 'SELECT team_id,name FROM teams WHERE "isControlledByUser" = false ORDER BY RANDOM() LIMIT 1'
     })
 
     //On change le joueur d'équipe
     await client.query({
-        text: "UPDATE players SET team_id = $1 WHERE player_id = $2",
+        text: 'UPDATE players SET team_id = $1 WHERE player_id = $2',
         values: [teamBuying.rows[0].team_id, idPlayer]
     })
 
     //On donne la somme d'argent à l'équipe de l'utilisateur
     //On sélectionne l'équipe pour ajouter de l'argent au compte en banque
     const team = await client.query({
-        text: 'SELECT cash FROM teams WHERE "isControlledByUser" = true',
+        text: 'SELECT cash FROM teams WHERE "isControlledByUser" = true AND game_id = $1',
+        values: [req.session.user.game]
     })
-
-    let cost = team.rows[0].cash + player.endurance*2000000 + player.grade*10000000 - player.age*500000
+    let cost = parseFloat(team.rows[0].cash) + (parseFloat(player.endurance)*2000000 + parseFloat(player.grade)*10000000 - parseInt(player.age)*500000)
     await client.query({
         text: 'UPDATE teams SET cash = $1 WHERE "isControlledByUser" = true',
         values: [cost]
     })
 
-    res.json(formateData(teamBuying))
+    res.json({teamBuying: formateData(teamBuying), cash: cost})
 
 })
 
@@ -548,33 +555,18 @@ router.post("/player/edit", async (req, res) => {
         return
     }
 
-    const { id, grade, endurance, team_id} = req.body
+    const { player_id, grade, endurance, team_id, role} = req.body
     
     //On sélectionne le joueur en BDD
     const playerResult = await client.query({
         text: "SELECT * FROM players WHERE player_id = $1",
-        values: [id]
+        values: [player_id]
     })
 
     const player = playerResult.rows[0]
 
     //On calcule les retombés ou le cout du changement
-    let cost = 0
-    if(endurance < player.endurance){
-        //On réduit l'endurance, donc on gagne de l'argent
-        cost = (player.endurance - endurance)*2000000
-    } else {
-        //Sinon on en perd
-        cost = -(player.endurance - endurance)*2000000
-    }
-
-    if(grade < player.grade){
-        //On réduit la note générale, donc on gagne de l'argent
-        cost += (player.grade - grade)*10000000
-    } else {
-        //Sinon on en perd
-        cost += -(player.grade - grade)*10000000
-    }
+    let cost = (parseFloat(player.endurance) - endurance)*2000000 + (parseFloat(player.grade) - grade)*10000000
 
     //On modifie le cash de l'équipe
     const team = await client.query({
@@ -582,7 +574,7 @@ router.post("/player/edit", async (req, res) => {
         values: [team_id]
     })
 
-    const cash = team.rows[0].cash + cost
+    const cash = parseFloat(team.rows[0].cash) + cost
     if(cash < 0){
         //L'utilisateur n'a pas assez d'argent pour effectuer cette action
         res.status(401).json({message: "Vous n'avez pas assez d'argent pour effectuer cette action"})
@@ -596,10 +588,11 @@ router.post("/player/edit", async (req, res) => {
 
     //Dans tous les cas on modifie le joueur
     await client.query({
-        text: "UPDATE players SET grade = $3, endurance = $4"
+        text: "UPDATE players SET grade = $1, endurance = $2, role = $3",
+        values: [grade, endurance, role]
     })
 
-    res.send('ok')
+    res.json(cash)
 })
 
 
@@ -610,7 +603,6 @@ router.post("/player/buy", async (req,res)=>{
         res.status(403).json({message: "Accès non autorisé"})
         return
     }
-    console.log(req.body)
     const id_player = req.body.player
     const team = await client.query({
         text: 'SELECT * FROM teams WHERE "isControlledByUser" = true AND game_id=$1',
@@ -661,7 +653,7 @@ router.post("/player/create", async (req,res)=>{
     })
 
     //Calcul nouveau prix de notre équipe
-    let price = team.rows[0].cash - (endurance * 2000000 + note * 10000000 - age * 500000)
+    let price = parseFloat(team.rows[0].cash) - (parseFloat(endurance) * 2000000 + parseFloat(note) * 10000000 - parseInt(age) * 500000)
 
     if (price < 0){
         res.status(401).json({message:"Vous n'avez pas assez d'argent pour créer ce joueur"})
@@ -671,8 +663,14 @@ router.post("/player/create", async (req,res)=>{
 
     //On ajoute notre nouveau joueur à notre équipe
     await client.query({
-        text: "INSERT INTO players(name,firstName,age,role,endurance,grade,team_id, game_id, energie) VALUES($1,$2,$3,$4,$5,$6,$7,$8,100)",
+        text: "INSERT INTO players(name,firstname,age,role,endurance,grade,team_id, game_id, energie) VALUES($1,$2,$3,$4,$5,$6,$7,$8,100)",
         values:[name,firstName,age,poste,endurance,note , team.rows[0].team_id, req.session.user.game]
+    })
+    
+    //On récupère l'objet du joueur créé
+    const player = await client.query({
+        text: "SELECT * FROM players WHERE name = $1 AND firstname = $2 AND age = $3 AND role = $4 AND endurance = $5 AND grade =$6 AND team_id = $7 AND game_id = $8 AND energie = $9",
+        values:[name,firstName,age,poste,endurance,note , team.rows[0].team_id, req.session.user.game, 100]
     })
     
 
@@ -681,7 +679,7 @@ router.post("/player/create", async (req,res)=>{
         values:[price, team.rows[0].team_id]
     })
 
-    res.json(price)
+    res.json({price, playerAdded: formateData(player)})
 })
 
 //fonction pour envoyer correctement les données (sans rows notamment)

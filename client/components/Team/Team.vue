@@ -1,6 +1,7 @@
 <template>
     <section id="team-profile">
         <edit-team v-show="showFormTeamEdition" :myteam="myteam" @toggle-view="toggle" @edit-team="editTeam"></edit-team>
+        <edit-player v-show="showFormPlayerEdition" :player="playerToEdit" :playerdefault="copyPlayer" @toggle-view="toggle" @edit-player="editPlayer"></edit-player>
         <div class="absolute-top__left">
             <router-link to="/play" class="btn">Retour à l'accueil</router-link>
         </div>
@@ -17,7 +18,7 @@
                             </div>
                             <div class="td-action">
                                 <div class="action-buttons">
-                                    <a v-on:click="edit(player.player_id)">Modifier</a>
+                                    <a v-on:click="editPlayerButton(player)">Modifier</a>
                                     <a v-on:click="sell(player.player_id)">Vendre</a>
                                 </div>
                                 <div class="td-description">
@@ -43,9 +44,12 @@
 
 <script>
     const EditTeam = window.httpVueLoader('./components/Team/_EditTeam.vue')
+    const EditPlayer = window.httpVueLoader('./components/Team/_EditPlayer.vue')
+
     module.exports = {
         components: {
-            EditTeam
+            EditTeam,
+            EditPlayer
         },
         props: {
             myplayers: Array,
@@ -54,22 +58,34 @@
         data () {
             return {
                 showFormTeamEdition:false,
+                showFormPlayerEdition:false,
+                playerToEdit: {},
+                copyPlayer: {}
             }
         },
         methods: {
             toggle(){
                 this.showFormTeamEdition = false
+                this.showFormPlayerEdition = false
             },
             editTeam(team){
                 this.$emit('edit-team', team)
+            },
+            editPlayerButton(player){
+                this.showFormPlayerEdition = true
+                this.playerToEdit = player
+                this.copyPlayer = JSON.parse(JSON.stringify(this.playerToEdit))
             },
             editPlayer(player){
                 this.$emit('edit-player', player)
             },
             sell(playerId){
-                let total = 0;
-                let message = "Voulez-vous vraiment vendre ce joueur, cette action vous rapportera " + total + " €"
-                this.$emit('display-alert', message, playerId)
+                //récupérer l'objet associé
+                const playerIndex = this.myplayers.map(c => c.player_id).indexOf(playerId)
+                const player = this.myplayers[playerIndex]
+                let total = player.endurance*2000000 + player.grade*10000000 - player.age*500000;
+                let message = "Voulez-vous vraiment vendre ce joueur, cette action vous rapportera " + total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €"
+                this.$emit('display-alert', message, "sell-player", playerId)
             },
         }
     }

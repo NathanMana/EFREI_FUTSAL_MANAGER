@@ -1,6 +1,8 @@
 <template>
     <section id="training">
-        <router-view></router-view>
+        <div class="absolute-top__left">
+            <router-link to="/play" class="btn">Retour à l'accueil</router-link>
+        </div>
         <div class="title">
             <h1>Entrainement</h1>
         </div>

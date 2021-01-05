@@ -21,7 +21,7 @@
                             <div class="td-content">
                                 {{team.name}}
                                 <img class="img-td" v-if="team.image" :src="team.image" alt="">
-                                <img class="img-td" v-else src="http://placehold.it/20x20" alt="">      
+                                <img class="img-td" v-else src="../../images/frontend/avatar_team.jpg" alt="">      
                             </div>
                         </td>
                     </tr>

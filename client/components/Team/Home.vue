@@ -14,7 +14,7 @@
                             <td>
                                 <span>{{index + 1}} - </span>
                                 <img v-if="team.image" :src="team.image" alt="">
-                                <img v-else src="http://placehold.it/20x20" alt="">
+                                <img v-else src="../../images/frontend/avatar_team.jpg" alt="">
                                 <span>{{team.name}}</span>
                             </td>
                         </tr>
@@ -92,7 +92,7 @@
     }
 
     .content .content-element {
-        flex: 1 1 600px;
+        flex: 0 1 600px;
         max-width: 800px;
     }
 

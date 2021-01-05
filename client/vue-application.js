@@ -13,8 +13,6 @@ const Simulation = window.httpVueLoader('./components/Team/_Simulation.vue')
 const Ranking = window.httpVueLoader('./components/Team/Ranking.vue')
 const TeamProfile = window.httpVueLoader('./components/Team/TeamProfile.vue')
 const Recrutement = window.httpVueLoader('./components/Team/Recrutement.vue')
-const CreatePlayer = window.httpVueLoader('./components/Team/_CreatePlayer.vue')
-const EditPlayer = window.httpVueLoader('./components/Team/_EditPlayer.vue')
 const Team = window.httpVueLoader('./components/Team/Team.vue')
 const Training = window.httpVueLoader('./components/Team/Training.vue')
 
@@ -74,13 +72,7 @@ const routes = [
     },
     { 
         path: '/play/recrutement', 
-        component: Recrutement, 
-        children: [
-            {
-                path: 'create-player',
-                component: CreatePlayer
-            },
-        ]
+        component: Recrutement
     },
     { 
         path: '/play/training', 
@@ -146,11 +138,12 @@ var app = new Vue({
             if(this.user.hasRunningGame){
                 const resultGame = await axios.get("/api/mygame")
                 this.ranking = resultGame.data.ranking
-                this.myPlayers = resultGame.data.players
+                this.myTeam.players = resultGame.data.players
                 this.myTeam.name = resultGame.data.myTeam.name
                 this.myTeam.image = resultGame.data.myTeam.image
                 this.myTeam.id = resultGame.data.myTeam.team_id
                 this.myTeam.cash = resultGame.data.myTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+                this.recrutement = resultGame.data.playersFree
             }
 
             //Si on recharge la page /play/team/:id, i lfaut  etre capable de récupérer les informations
@@ -246,7 +239,7 @@ var app = new Vue({
                 if(this.user.hasRunningGame){
                     const resultGame = await axios.get("/api/mygame")
                     this.ranking = resultGame.data.ranking
-                    this.myPlayers = resultGame.data.players
+                    this.myTeam.players = resultGame.data.players
                     this.myTeam.id = resultGame.data.myTeam.team_id
                     this.myTeam.name = resultGame.data.myTeam.name
                     this.myTeam.image = resultGame.data.myTeam.image
@@ -274,7 +267,6 @@ var app = new Vue({
                 this.user.game = 0
                 this.user.hasRunningGame = false
                 this.ranking = []
-                this.myPlayers = []
                 this.myTeam.name = ""
                 this.myTeam.image = ""
                 this.myTeam.players = []
@@ -396,10 +388,11 @@ var app = new Vue({
         },
         async sellPlayer(idPlayer){
             try{
-                const result = await axios.post("/api/player/sell", idPlayer)
+                const result = await axios.post("/api/player/sell", {idPlayer})
                 var indexPlayer = this.myTeam.players.map(c => c.player_id).indexOf(idPlayer)
                 this.myTeam.players.splice(indexPlayer, 1)
-                this.displaySuccess(`Joueur vendu à ${result.data.name}`)
+                this.myTeam.cash = result.data.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+                this.displaySuccess(`Joueur vendu à ${result.data.teamBuying[0].name}`)
             }
             catch(error){
                 this.errorMessage(error)
@@ -408,39 +401,39 @@ var app = new Vue({
         async editPlayer(player){
             try{
                 const result = await axios.post("/api/player/edit", player)
-                var indexPlayer = this.myTeam.players.map(c => c.player_id).indexOf(player.player_id)
-                this.myTeam.players[indexPlayer] = player
                 this.myTeam.cash = result.data.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-                this.displaySuccess(`Joueur vendu à ${result.data.name}`)
+                this.displaySuccess('Modification effectuée avec succès')
             } catch(error){
                 this.errorMessage(error)
             }
         },
-
         async buyPlayer(player_id){
             try{
                 const data = {player:player_id}
                 const result = await axios.post("/api/player/buy", data)
-                var indexPlayer = this.recrutement.map(c => c.player_id).indexOf(player_id)
-                this.recrutement.splice(indexPlayer, 1)
-                this.displaySuccess(`Achat réussi`)
-                this.myTeam.cash = result.data
+                //on récupere le cash restant
+                this.myTeam.cash = result.data.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+                //On supprime le joueur recruté dans les disponniblités du recrutement
+                let indexPlayer = this.recrutement.map(c => c.player_id).indexOf(player_id)
+                const player = this.recrutement.splice(indexPlayer, 1)
+                //On ajoute le joueur dans l'équipe
+                this.myTeam.players.push(player[0])
+                this.displaySuccess(`${player[0].firstname} ${player[0].name} fait maintenant parti de l'équipe`)
             } catch(error){
                 this.errorMessage(error)
             }
-
         },
         async createPlayer(player){
-            console.log(player)
             try{
+                console.log(player)
                 const result = await axios.post("/api/player/create", player)
-
+                this.displaySuccess(`${player.firstName} ${player.name} fait maintenant parti de l'équipe`)
+                this.myTeam.cash = result.data.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+                this.myTeam.players.push(result.data.playerAdded[0])
             } catch(error){
                 console.log(error)
                 this.errorMessage(error)
             }
         }
-
-        
     }
 })

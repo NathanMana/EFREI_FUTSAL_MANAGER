@@ -6,7 +6,7 @@
         </div>
         <div class="title">
             <img v-if="teamprofile.image" :src="teamprofile.image" alt="">
-            <img v-else src="http://placehold.it/20x20" alt="">
+            <img v-else src="~/client/images/frontend/avatar_team.jpg" alt="">
             <h1>{{teamprofile.name}}</h1>
         </div>
         <div class="content">
