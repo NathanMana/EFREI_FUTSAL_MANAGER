@@ -7,11 +7,11 @@
             <h1>Calendrier</h1>
         </div>
         <div class="content">
-            <article v-for="(week, index) in calendar" :key="week[0].week_id">
+            <article v-for="(week, index) in calendar" :key="week.week_id">
                 <div class="article-head">
                     <span>{{displayDayMatch(index + 1)}} journée</span>
                 </div>
-                <div v-for="match in week" :key="match.team_dom_id" class="article-content">
+                <div v-for="match in week.matchs" :key="match.team_dom_id" class="article-content">
                     <span><img :src="displayTeamImage(match.team_dom_id)" alt=""> {{displayTeamName(match.team_dom_id)}}</span>
                     <span>{{displayMatchResult(match.result)}}</span>
                     <span>{{displayTeamName(match.team_ext_id)}} <img :src="displayTeamImage(match.team_ext_id)" alt=""></span>
@@ -104,6 +104,10 @@
 
     .article-content span:nth-child(2){
         text-align: center;
+    }
+
+    .article-content span:last-child {
+        text-align: right;
     }
 
     .article-content img {

@@ -290,7 +290,7 @@ aside {
     background: var(--blue_light);
     top: 79px;
     height:calc(100vh - 79px);
-    z-index: 20;
+    z-index: 100;
     transform: translateX(100%);
     transition: 0.3s ease-out;
     display: none;
@@ -332,7 +332,7 @@ aside nav ul li a {
     display: block;
 }
 
-@media screen and (max-width: 1400px){
+@media screen and (max-width: 1600px){
     .nav-play-li {
         display: none;
     }
