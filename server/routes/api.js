@@ -307,7 +307,7 @@ router.post('/team/create', async (req, res) => {
         values: [req.session.user.game]
     })
 
-    //On récupère l'quipe de l'utilisateur
+    //On récupère l'équipe de l'utilisateur
     const userTeamIndex = listTeams.rows.map(c => c.isControlledByUser).indexOf(true);
     const userTeam = listTeams.rows.splice(userTeamIndex, 1)
 
@@ -366,10 +366,63 @@ router.post('/team/create', async (req, res) => {
         values: [req.session.user.game]
     })
 
-    //On envoie les données
     let ranking= formateData(rankingData)
 
-    res.json({ranking, userTeam: userTeam[0]})
+    //On doit faire la simulation du calendrier
+    //D'abord il faut créer les semaines (il y a 10 équipes donc 9 matchs soit 9 semaines à créer (1 match / semaine))
+    for(let i = 0; i < 9; i++){
+        await client.query({
+            text: "INSERT INTO weeks(done, game_id) VALUES (false, $1)",
+            values: [req.session.user.game]
+        })
+    }
+
+    //Ensuite on récupère les semaines pour programmer les matchs
+    const weeksData = await client.query({
+        text: "SELECT * FROM weeks WHERE game_id = $1",
+        values: [req.session.user.game]
+    })
+
+    const weeks = formateData(weeksData) // On récupère les semaines de compétition
+
+    /* La suite de ce code a été forteement inspiré par un post sur StackOverflow - gestion d'algorithme de tournoi */
+    const nberTeams = ranking.length;
+    const half = nberTeams / 2; // La moitié de l'équipe
+    const calendar = [];  // Tableau qui va stocker l'ensemble des matchs de toutes les semaines
+    const teamsIndexes = ranking.map((_, i) => i).slice(1); // On  sauvegarde les indexes dans un ordre donné que l'on va faire varier
+
+    weeks.forEach( week => {
+
+        const matchWeeks = []; //Va stocker les matchs d'un week-end
+        const newTeamIndexes = [0].concat(teamsIndexes); // La premiere équipe sera toujours à domicile, mais on s'en fiche
+
+        const firstHalf = newTeamIndexes.slice(0, half); //On va faire varier la premiere ligne avec la seconde, et prendre les données sous forme de colonne
+        const secondHalf = newTeamIndexes.slice(half, nberTeams).reverse();
+
+        for (let i = 0; i < firstHalf.length; i++) {
+            matchWeeks.push({
+                week_id: week.week_id,
+                team_dom: ranking[firstHalf[i]].team_id,
+                team_ext: ranking[secondHalf[i]].team_id,
+            });
+        }
+
+        // On place le dernier index a la premiere position
+        teamsIndexes.push(teamsIndexes.shift());
+        calendar.push(matchWeeks);
+    })
+    
+    calendar.forEach(week => {
+        week.forEach(async match => {
+            //on insère le match en BDD
+            await client.query({
+                text: "INSERT INTO matchs (team_dom_id, team_ext_id, week_id) VALUES ($1,$2,$3)",
+                values: [match.team_dom, match.team_ext, match.week_id]
+            })
+        })
+    })
+
+    res.json({ranking, userTeam: userTeam[0], calendar})
 
     function randomInt(max) {
         return Math.floor(Math.random() * Math.floor(max));
@@ -400,7 +453,7 @@ router.get("/mygame", async (req,res) => {
 
     //On récupère le classement
     const rankingData = await client.query({
-        text: 'SELECT * FROM teams WHERE game_id = $1 ORDER BY points ASC',
+        text: 'SELECT * FROM teams WHERE game_id = $1 ORDER BY points DESC',
         values: [req.session.user.game]
     })
     const ranking = formateData(rankingData)
@@ -421,11 +474,30 @@ router.get("/mygame", async (req,res) => {
     })
     const playersFree = formateData(playersFreeData)
 
+    //on récupere le calendrier du championnat
+    //Pour cela il faut récupérer les semaines de championnat
+    const weeksData = await client.query({
+        text: "SELECT * FROM weeks WHERE game_id = $1",
+        values: [req.session.user.game]
+    })
+    const weeks = formateData(weeksData)
+    let calendar = []
+    //On utilise la boucle for que performe les promesses
+    for(let i = 0; i < weeks.length; i++){
+        const weekData = await client.query({
+            text: 'SELECT * FROM matchs WHERE week_id = $1',
+            values: [weeks[i].week_id]
+        })
+        const weekResult = formateData(weekData)
+        calendar.push(weekResult)
+    }
+
     const data = {
         ranking,
         myTeam,
         players,
-        playersFree
+        playersFree,
+        calendar
     }
 
     res.json(data)

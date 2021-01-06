@@ -15,14 +15,13 @@ const TeamProfile = window.httpVueLoader('./components/Team/TeamProfile.vue')
 const Recrutement = window.httpVueLoader('./components/Team/Recrutement.vue')
 const Team = window.httpVueLoader('./components/Team/Team.vue')
 const Training = window.httpVueLoader('./components/Team/Training.vue')
-
+const Calendar = window.httpVueLoader('./components/Team/Calendar.vue')
 
 const children = [ 
     {
         path: 'play/simulation',
         component: Simulation
     },
-    
 ]
 
 
@@ -82,6 +81,10 @@ const routes = [
     { 
         path: '/play/team', 
         component: Team
+    },
+    { 
+        path: '/play/calendar', 
+        component: Calendar
     }
 ]
 
@@ -110,6 +113,7 @@ var app = new Vue({
         ranking: [],
         teamProfile: {},
         recrutement:[],
+        calendar: [],
         alert: {
             displayDOMAlert: false,
             alertMessage: "",
@@ -144,6 +148,7 @@ var app = new Vue({
                 this.myTeam.id = resultGame.data.myTeam.team_id
                 this.myTeam.cash = resultGame.data.myTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
                 this.recrutement = resultGame.data.playersFree
+                this.calendar = resultGame.data.calendar
             }
 
             //Si on recharge la page /play/team/:id, i lfaut  etre capable de récupérer les informations
@@ -243,7 +248,9 @@ var app = new Vue({
                     this.myTeam.id = resultGame.data.myTeam.team_id
                     this.myTeam.name = resultGame.data.myTeam.name
                     this.myTeam.image = resultGame.data.myTeam.image
-                    this.myTeam.cash = resultGame.data.myTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+                    this.myTeam.cash = resultGame.data.myTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+                    this.recrutement = resultGame.data.playersFree
+                    this.calendar = resultGame.data.calendar
                     this.$router.push('/play/')
                 } else {
                     this.$router.push('/team/create')
@@ -274,6 +281,7 @@ var app = new Vue({
                 this.myTeam.cash = "0"
                 this.ranking = []
                 this.recrutement =[]
+                this.calendar = []
                 this.$router.push('/')
             } catch(error){
                 this.errorMessage(error)
@@ -320,6 +328,7 @@ var app = new Vue({
                 this.myTeam.id = result.data.userTeam.team_id
                 this.myTeam.cash = result.data.userTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
                 this.user.hasRunningGame = true
+                this.calendar = result.data.calendar
                 this.displaySuccess('Partie créée !')
                 this.$router.push('/play')
             } catch(error){
