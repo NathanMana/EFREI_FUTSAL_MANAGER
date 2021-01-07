@@ -8,46 +8,48 @@
         </div>
         <div class="content">
             <div class="content-element" id="entrainement">
-                <h2 class="h2-table">Programme</h2>
-                <table>
-                    <tbody>
-                        <tr><td>
-                            <span>Lundi</span>
-                            <span>  -  </span>
-                            <span>Training 1</span>
-                        </td></tr>
-                        <tr><td>
-                            <span>Mardi</span>
-                            <span> - </span>
-                            <span>Training 1</span>
-                        </td></tr>
-                        <tr><td>
-                            <span>Mercredi</span>
-                            <span> - </span>
-                            <span>Training 1</span>
-                        </td></tr>
-                        <tr><td>
-                            <span>Jeudi</span>
-                            <span> - </span>
-                            <span>Training 1</span>
-                        </td></tr>
-                        <tr><td>
-                            <span>Vendredi</span>
-                            <span> - </span>
-                            <span>Training 1</span>
-                        </td></tr>
-                        <tr><td>
-                            <span>Samedi</span>
-                            <span> - </span>
-                            <span>Training 1</span>
-                        </td></tr>
-                        <tr><td>
-                            <span>Dimanche</span>
-                            <span> - </span>
-                            <span>Training 1</span>
-                        </td></tr>
-                    </tbody>
-                </table>
+                <article class="training" v-for="training in recrutement" :key="training.training_id">
+                    <h2 class="h2-table">Programme</h2>
+                    <table>
+                        <tbody>
+                            <tr><td>
+                                <span>{{training.day}}</span>
+                                <span>  -  </span>
+                                <span>{{training.type}}</span>
+                            </td></tr>
+                            <tr><td>
+                                <span>Mardi</span>
+                                <span> - </span>
+                                <span>Training 1</span>
+                            </td></tr>
+                            <tr><td>
+                                <span>Mercredi</span>
+                                <span> - </span>
+                                <span>Training 1</span>
+                            </td></tr>
+                            <tr><td>
+                                <span>Jeudi</span>
+                                <span> - </span>
+                                <span>Training 1</span>
+                            </td></tr>
+                            <tr><td>
+                                <span>Vendredi</span>
+                                <span> - </span>
+                                <span>Training 1</span>
+                            </td></tr>
+                            <tr><td>
+                                <span>Samedi</span>
+                                <span> - </span>
+                                <span>Training 1</span>
+                            </td></tr>
+                            <tr><td>
+                                <span>Dimanche</span>
+                                <span> - </span>
+                                <span>Training 1</span>
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </article>    
             </div>
             <div class="content-element" id="ajouter">    
                 <form class="style-train">
@@ -72,18 +74,39 @@
 
 <script>
     module.exports = {
+        props:{
+
+        },
         data () {
             return {
                 training: {
                     type: "",
                     day: "",
+                },
+                error : {
+                    message: "",
+                    state: false
                 }
+
             }
         },
         methods: {
-            
+            addTraining(){
+                this.error.state = false
+                if(!this.training.day){
+                    this.error.message = "Veuillez sélectionner un jour"
+                    this.error.state = true
+                }
+                if(!this.training.type){
+                    this.error.message = "Le nom de l'entrainement ne peut pas être nul"
+                    this.error.state = true
+                }
+
+                if(!this.error.state)
+                    this.$emit('create-team', this.team)
+            },
+            }
         }
-    }
 </script>
 <style scoped>
 .style-table tbody tr:nth-child(2n){

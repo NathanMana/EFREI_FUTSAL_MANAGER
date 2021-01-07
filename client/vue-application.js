@@ -425,7 +425,6 @@ var app = new Vue({
         },
         async createPlayer(player){
             try{
-                console.log(player)
                 const result = await axios.post("/api/player/create", player)
                 this.displaySuccess(`${player.firstName} ${player.name} fait maintenant parti de l'équipe`)
                 this.myTeam.cash = result.data.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
@@ -434,6 +433,15 @@ var app = new Vue({
                 console.log(error)
                 this.errorMessage(error)
             }
-        }
+        },
+        async addTraining(){
+            try{
+                const result = await axios.post("/api/team/training")
+                this.displaySuccess('Entrainement ajouté !')
+            } catch(error){
+                console.log(error)
+                this.errorMessage(error)
+            }
+        },
     }
 })

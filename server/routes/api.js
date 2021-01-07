@@ -6,7 +6,7 @@ const { Client } = require('pg')
 const client = new Client({
     user: 'postgres',
     host: 'localhost',
-    password: 'root',
+    password: 'allforone187=ken',
     database: 'EFREI_FUTSAL_MANAGER'
 })
 
@@ -612,29 +612,23 @@ router.post("/player/buy", async (req,res)=>{
     await client.query({
         text: "UPDATE players SET team_id=$1 WHERE player_id = $2",
         values:[team.rows[0].team_id, id_player]
-        
     })
     //On récupère le joueur qu'on veut acheter
     const player_result = await client.query({
         text: "SELECT * FROM players WHERE player_id = $1",
         values:[id_player]
     })
-
     const player = player_result.rows[0]
-
     //Calcul nouveau prix de notre équipe
     let price = team.rows[0].cash - (player.endurance * 2000000 + player.grade * 10000000 - player.age * 500000)
-
     if (price < 0){
         res.status(401).json({message:"Vous n'avez pas assez d'argent"})
         return
     }
-
     await client.query({
         text: "UPDATE teams SET cash=$1 WHERE team_id = $2",
         values:[price, team.rows[0].team_id]
     })
-
     res.json(price)
 })
 
@@ -646,42 +640,50 @@ router.post("/player/create", async (req,res)=>{
         return
     }
     const { name,firstName,age,poste,endurance,note } = req.body
-
     const team = await client.query({
         text: 'SELECT * FROM teams WHERE "isControlledByUser" = true AND game_id=$1',
         values:[req.session.user.game]
     })
-
     //Calcul nouveau prix de notre équipe
     let price = parseFloat(team.rows[0].cash) - (parseFloat(endurance) * 2000000 + parseFloat(note) * 10000000 - parseInt(age) * 500000)
-
     if (price < 0){
         res.status(401).json({message:"Vous n'avez pas assez d'argent pour créer ce joueur"})
         return
     }
-
-
     //On ajoute notre nouveau joueur à notre équipe
     await client.query({
         text: "INSERT INTO players(name,firstname,age,role,endurance,grade,team_id, game_id, energie) VALUES($1,$2,$3,$4,$5,$6,$7,$8,100)",
         values:[name,firstName,age,poste,endurance,note , team.rows[0].team_id, req.session.user.game]
     })
-    
     //On récupère l'objet du joueur créé
     const player = await client.query({
         text: "SELECT * FROM players WHERE name = $1 AND firstname = $2 AND age = $3 AND role = $4 AND endurance = $5 AND grade =$6 AND team_id = $7 AND game_id = $8 AND energie = $9",
         values:[name,firstName,age,poste,endurance,note , team.rows[0].team_id, req.session.user.game, 100]
     })
-    
-
     await client.query({
         text: "UPDATE teams SET cash=$1 WHERE team_id = $2",
         values:[price, team.rows[0].team_id]
     })
-
     res.json({price, playerAdded: formateData(player)})
 })
 
+//fonction pour ajouter un entrainement
+router.post("/training", async (req, res) => {
+    if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
+        res.status(403).json({message: "Accès non autorisé"})
+        return
+    }
+
+    const { day, week_id} = req.body
+
+    //On ajoute l'entrainement en BDD
+    await client.query({
+        text: "UPDATE trainings SET day = $1, week_id = $3",
+        values: [day, training.rows[0].week_id]
+    })
+
+    res.json({training_id,day})
+})
 //fonction pour envoyer correctement les données (sans rows notamment)
 function formateData(data){
     let tabData = []
