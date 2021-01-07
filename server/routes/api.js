@@ -98,6 +98,7 @@ router.post('/login', async (req,res) => {
 
     if(resultGame.rows[0]){
         req.session.user.hasRunningGame = true
+        req.session.user.game = resultGame.rows[0].game_id
     }
 
     res.json(req.session.user);
@@ -307,7 +308,7 @@ router.post('/team/create', async (req, res) => {
         values: [req.session.user.game]
     })
 
-    //On récupère l'quipe de l'utilisateur
+    //On récupère l'équipe de l'utilisateur
     const userTeamIndex = listTeams.rows.map(c => c.isControlledByUser).indexOf(true);
     const userTeam = listTeams.rows.splice(userTeamIndex, 1)
 
@@ -366,10 +367,86 @@ router.post('/team/create', async (req, res) => {
         values: [req.session.user.game]
     })
 
-    //On envoie les données
     let ranking= formateData(rankingData)
 
-    res.json({ranking, userTeam: userTeam[0]})
+    //On doit faire la simulation du calendrier
+    //D'abord il faut créer les semaines (il y a 10 équipes donc 9 matchs soit 9 semaines à créer (1 match / semaine))
+    for(let i = 0; i < 9; i++){
+        await client.query({
+            text: "INSERT INTO weeks(done, game_id) VALUES (false, $1)",
+            values: [req.session.user.game]
+        })
+    }
+
+    //Ensuite on récupère les semaines pour programmer les matchs
+    const weeksData = await client.query({
+        text: "SELECT * FROM weeks WHERE game_id = $1",
+        values: [req.session.user.game]
+    })
+
+    const weeks = formateData(weeksData) // On récupère les semaines de compétition
+
+    /* La suite de ce code a été forteement inspiré par un post sur StackOverflow - gestion d'algorithme de tournoi */
+    const nberTeams = ranking.length;
+    const half = nberTeams / 2; // La moitié de l'équipe
+    const calendar = [];  // Tableau qui va stocker l'ensemble des matchs de toutes les semaines
+    const teamsIndexes = ranking.map((_, i) => i).slice(1); // On  sauvegarde les indexes dans un ordre donné que l'on va faire varier
+
+    weeks.forEach( week => {
+
+        const matchWeeks = []; //Va stocker les matchs d'un week-end
+        const newTeamIndexes = [0].concat(teamsIndexes); // La premiere équipe sera toujours à domicile, mais on s'en fiche
+
+        const firstHalf = newTeamIndexes.slice(0, half); //On va faire varier la premiere ligne avec la seconde, et prendre les données sous forme de colonne
+        const secondHalf = newTeamIndexes.slice(half, nberTeams).reverse();
+
+        for (let i = 0; i < firstHalf.length; i++) {
+            matchWeeks.push({
+                week_id: week.week_id,
+                team_dom: ranking[firstHalf[i]].team_id,
+                team_ext: ranking[secondHalf[i]].team_id,
+            });
+        }
+
+        // On place le dernier index a la premiere position
+        teamsIndexes.push(teamsIndexes.shift());
+        calendar.push(matchWeeks);
+    })
+    
+    calendar.forEach(week => {
+        week.forEach(async match => {
+            //on insère le match en BDD
+            await client.query({
+                text: "INSERT INTO matchs (team_dom_id, team_ext_id, week_id) VALUES ($1,$2,$3)",
+                values: [match.team_dom, match.team_ext, match.week_id]
+            })
+        })
+    })
+
+    //Il faut récupérer le calendrier et bien le formater
+    //on récupere le calendrier du championnat
+    //Pour cela il faut récupérer les semaines de championnat
+    const weeksData2 = await client.query({
+        text: "SELECT * FROM weeks WHERE game_id = $1 ORDER BY week_id ASC",
+        values: [req.session.user.game]
+    })
+    const weeks2 = formateData(weeksData2)
+    let calendarToSend = []
+    //On utilise la boucle for que performe les promesses
+    for(let i = 0; i < weeks2.length; i++){
+        const weekData3 = await client.query({
+            text: 'SELECT * FROM matchs WHERE week_id = $1 ORDER BY week_id ASC',
+            values: [weeks2[i].week_id]
+        })
+        const weekResult = formateData(weekData3)
+        calendarToSend.push({
+            week_id: weeks2[i].week_id,
+            done: weeks2[i].done,
+            matchs: weekResult
+        })
+    }
+
+    res.json({ranking, userTeam: userTeam[0], calendar: calendarToSend})
 
     function randomInt(max) {
         return Math.floor(Math.random() * Math.floor(max));
@@ -400,7 +477,7 @@ router.get("/mygame", async (req,res) => {
 
     //On récupère le classement
     const rankingData = await client.query({
-        text: 'SELECT * FROM teams WHERE game_id = $1 ORDER BY points ASC',
+        text: 'SELECT * FROM teams WHERE game_id = $1 ORDER BY points DESC',
         values: [req.session.user.game]
     })
     const ranking = formateData(rankingData)
@@ -421,11 +498,34 @@ router.get("/mygame", async (req,res) => {
     })
     const playersFree = formateData(playersFreeData)
 
+    //on récupere le calendrier du championnat
+    //Pour cela il faut récupérer les semaines de championnat
+    const weeksData = await client.query({
+        text: "SELECT * FROM weeks WHERE game_id = $1 ORDER BY week_id ASC",
+        values: [req.session.user.game]
+    })
+    const weeks = formateData(weeksData)
+    let calendar = []
+    //On utilise la boucle for que performe les promesses
+    for(let i = 0; i < weeks.length; i++){
+        const weekData = await client.query({
+            text: 'SELECT * FROM matchs WHERE week_id = $1 ORDER BY week_id ASC',
+            values: [weeks[i].week_id]
+        })
+        const weekResult = formateData(weekData)
+        calendar.push({
+            week_id: weeks[i].week_id,
+            done: weeks[i].done,
+            matchs: weekResult
+        })
+    }
+
     const data = {
         ranking,
         myTeam,
         players,
-        playersFree
+        playersFree,
+        calendar
     }
 
     res.json(data)
@@ -669,11 +769,6 @@ router.post("/player/create", async (req,res)=>{
 
 //fonction pour ajouter un entrainement
 router.post("/training", async (req, res) => {
-    if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
-        res.status(403).json({message: "Accès non autorisé"})
-        return
-    }
-
     const { day, week_id} = req.body
 
     //On ajoute l'entrainement en BDD
@@ -684,16 +779,149 @@ router.post("/training", async (req, res) => {
 
     res.json({training_id,day})
 })
+router.get('/simulation', async (req, res) => {
+    if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
+        res.status(403).json({message: "Accès non autorisé"})
+        return
+    }
+
+    
+    //On vérifie si l'équipe du joueur a assez de joueurs
+    const teamUserData = await client.query({
+        text: 'SELECT * FROM teams WHERE "isControlledByUser" = true AND game_id = $1',
+        values: [req.session.user.game]
+    })
+    const teamUser = formateData(teamUserData)
+
+    const playersOfUserTeam = await client.query({
+        text: 'SELECT * FROM players WHERE team_id = $1',
+        values: [teamUser[0].team_id]
+    })
+
+    if(playersOfUserTeam.rowCount < 5){
+        res.status(401).json({message: "Vous n'avez pas assez de joueurs"})
+        return
+    }
+
+    //Récupérer la semaine en cours
+    const weekSimulatingData = await client.query({
+        text: "SELECT * FROM weeks WHERE done = false ORDER BY week_id ASC LIMIT 1"
+    })
+    const weekSimulating = formateData(weekSimulatingData)
+
+    //Ensuite on récupère chaque match de la semaine à simuler
+    const matchsData = await client.query({
+        text: "SELECT * FROM matchs WHERE week_id = $1",
+        values: [weekSimulating[0].week_id]
+    })
+    const matchs = formateData(matchsData)
+    console.log(matchs)
+
+    for(let i = 0; i < matchs.length; i++){
+        const match = matchs[i]
+        //Il faut récupérer les 2 équipes du match avec leurs joueurs
+        const informationsTeamDomicileData = await client.query({
+            text: "SELECT * FROM teams JOIN players ON teams.team_id = players.team_id WHERE teams.team_id = $1 ORDER BY players.team_id DESC LIMIT 5;",
+            values: [match.team_dom_id]
+        })
+        const informationsTeamDomicile = formateData(informationsTeamDomicileData)
+
+        const informationsTeamExterieurData = await client.query({
+            text: "SELECT * FROM teams JOIN players ON teams.team_id = players.team_id WHERE teams.team_id = $1 ORDER BY players.team_id DESC LIMIT 5;",
+            values: [match.team_ext_id]
+        })
+        const informationsTeamExterieur = formateData(informationsTeamExterieurData)
+        
+        //Il faut simuler le match en fonction des joueurs
+        //On compare la somme des notes des joueurs 
+        let totalDom = 0
+        informationsTeamDomicile.forEach(player => {
+            totalDom += player.energie*player.grade
+        })
+
+        let totalExt = 0
+        informationsTeamExterieur.forEach(player => {
+            totalExt += player.energie*player.grade
+        })
+
+        //On calcule les buts marqués
+        let goalScoredByLoser = getRandomInt(5) //Le perdant marque 5 buts max
+        let goalScoredByWinner = goalScoredByLoser + 1 + getRandomInt(5)
+        let result = ""
+
+        if(totalDom > totalExt){
+            result = goalScoredByWinner + " - " + goalScoredByLoser
+            //On ajoute les 3 points a l'équipe a domicile
+            await client.query({
+                text: "UPDATE teams SET points = $1 WHERE team_id = $2",
+                values: [(informationsTeamDomicile[0].points + 3),informationsTeamDomicile[0].team_id]
+            })
+        } else if(totalDom < totalExt){
+            result = goalScoredByLoser + " - " + goalScoredByWinner
+            await client.query({
+                text: "UPDATE teams SET points = $1 WHERE team_id = $2",
+                values: [(informationsTeamExterieur[0].points + 3),informationsTeamExterieur[0].team_id]
+            })
+        } else {
+            result = goalScoredByLoser + " - " + goalScoredByLoser
+            await client.query({
+                text: "UPDATE teams SET points = $1 WHERE team_id = $2",
+                values: [(informationsTeamDomicile[0].points + 1),informationsTeamDomicile[0].team_id]
+            })
+            await client.query({
+                text: "UPDATE teams SET points = $1 WHERE team_id = $2",
+                values: [(informationsTeamExterieur[0].points + 1),informationsTeamExterieur[0].team_id]
+            })
+        } 
+
+        //On met à jour le résultat de la simulation
+        await client.query({
+            text: "UPDATE matchs SET result = $1 WHERE match_id = $2",
+            values: [result, match.match_id]
+        })
+
+        //On fatigue les joueurs
+        for(let k = 0; k < informationsTeamDomicile.length; k++){
+            const player = informationsTeamDomicile[k]
+            const energie = player.energie - ( (1-((player.endurance-1)/5) )*player.energie)
+            await client.query({
+                text: "UPDATE players SET energie = $1 WHERE player_id = $2",
+                values: [Math.round(energie), player.player_id]
+            })
+        }
+
+        for(let k = 0; k < informationsTeamExterieur.length; k++){
+            const player = informationsTeamDomicile[k]
+            const energie = player.energie - ( (1-((player.endurance-1)/5) )*player.energie)
+            await client.query({
+                text: "UPDATE players SET energie = $1 WHERE player_id = $2",
+                values: [Math.round(energie), player.player_id]
+            })
+        }
+
+        //On édite la semaine
+        await client.query({
+            text: "UPDATE weeks SET done = true WHERE week_id = $1",
+            values: [weekSimulating[0].week_id]
+        })
+    }
+
+    res.json("ok")
+})
+
 //fonction pour envoyer correctement les données (sans rows notamment)
 function formateData(data){
     let tabData = []
     data.rows.forEach(item => {
         tabData.push(item)
     })
-
     return tabData
 }
 
+//Fonction Mozilla doc
+function getRandomInt(max) {
+    return Math.floor(Math.random() * Math.floor(max));
+}
 
 
 

@@ -15,14 +15,13 @@ const TeamProfile = window.httpVueLoader('./components/Team/TeamProfile.vue')
 const Recrutement = window.httpVueLoader('./components/Team/Recrutement.vue')
 const Team = window.httpVueLoader('./components/Team/Team.vue')
 const Training = window.httpVueLoader('./components/Team/Training.vue')
-
+const Calendar = window.httpVueLoader('./components/Team/Calendar.vue')
 
 const children = [ 
     {
         path: 'play/simulation',
         component: Simulation
     },
-    
 ]
 
 
@@ -82,6 +81,10 @@ const routes = [
     { 
         path: '/play/team', 
         component: Team
+    },
+    { 
+        path: '/play/calendar', 
+        component: Calendar
     }
 ]
 
@@ -110,6 +113,8 @@ var app = new Vue({
         ranking: [],
         teamProfile: {},
         recrutement:[],
+        calendar: [],
+        weekOpponent: "",
         alert: {
             displayDOMAlert: false,
             alertMessage: "",
@@ -144,6 +149,8 @@ var app = new Vue({
                 this.myTeam.id = resultGame.data.myTeam.team_id
                 this.myTeam.cash = resultGame.data.myTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
                 this.recrutement = resultGame.data.playersFree
+                this.calendar = resultGame.data.calendar
+                this.findWeekOpponent()
             }
 
             //Si on recharge la page /play/team/:id, i lfaut  etre capable de récupérer les informations
@@ -161,7 +168,6 @@ var app = new Vue({
             }
         }
         catch(error){
-            console.log(error)
             if(window.location.href != "http://localhost:3000/#/"){
                 this.$router.push('/')
             }
@@ -211,8 +217,8 @@ var app = new Vue({
                 this.alert.dataAction = data
         },
         errorMessage(error){
-            if (error.response) {
-                this.error.message = error.response.data.message
+            if (error) {
+                this.error.message = error
                 this.error.state = true
             }
         },
@@ -222,6 +228,27 @@ var app = new Vue({
             }
             return false
         },
+        findWeekOpponent(){
+            const week = this.calendar.filter(w => w.done === false)
+            const match = week[0].matchs.find(c => c.team_dom_id === this.myTeam.id || c.team_ext_id === this.myTeam.id)
+            let opponentId = 0
+            if(match.team_dom_id === this.myTeam.id){
+                opponentId = match.team_ext_id
+            } else if(match.team_ext_id === this.myTeam.id) {
+                opponentId = match.team_dom_id
+            }
+
+            const opponent = this.ranking.find(c => c.team_id === opponentId)
+            this.weekOpponent = opponent.name
+        },
+        displayWeekOpponent(){
+            const voyelles = ["a",'e','i','o','u','y']
+            if(voyelles.indexOf(this.weekOpponent[0]) != -1){
+                return "l'" + this.weekOpponent
+            } else {
+                return this.weekOpponent
+            }
+        },
         async registration(user){
             try {
                 await axios.post('/api/registration', user)
@@ -229,7 +256,9 @@ var app = new Vue({
                 this.displaySuccess("Inscription réussie")
             }
             catch(error){
-                this.errorMessage(error)
+                if(error.response){
+                    this.errorMessage(error.response.data.message)
+                }
             }   
         },
         async login(user){
@@ -243,7 +272,10 @@ var app = new Vue({
                     this.myTeam.id = resultGame.data.myTeam.team_id
                     this.myTeam.name = resultGame.data.myTeam.name
                     this.myTeam.image = resultGame.data.myTeam.image
-                    this.myTeam.cash = resultGame.data.myTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+                    this.myTeam.cash = resultGame.data.myTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+                    this.calendar = resultGame.data.calendar
+                    this.recrutement = resultGame.data.playersFree
+                    this.findWeekOpponent()
                     this.$router.push('/play/')
                 } else {
                     this.$router.push('/team/create')
@@ -252,8 +284,9 @@ var app = new Vue({
                 this.displaySuccess(`Bienvenue ${this.user.username}`)
             } 
             catch(error){
-                console.log(error)
-                this.errorMessage(error)
+                if(error.response){
+                    this.errorMessage(error.response.data.message)
+                }
             }
         },
         async logout(){
@@ -274,18 +307,22 @@ var app = new Vue({
                 this.myTeam.cash = "0"
                 this.ranking = []
                 this.recrutement =[]
+                this.calendar = []
+                this.weekOpponent = ""
                 this.$router.push('/')
             } catch(error){
-                this.errorMessage(error)
-            }
+                if(error.response){
+                    this.errorMessage(error.response.data.message)
+                }            }
         },
         async editAccount(){
             try{
                 await axios.post("/api/account/edit", this.user)
                 this.displaySuccess(`Modifications effectuées avec succès`)
             } catch(error){
-                this.errorMessage(error)
-            }
+                if(error.response){
+                    this.errorMessage(error.response.data.message)
+                }            }
         },
         async editPassword(userPassword){
             try{
@@ -293,8 +330,9 @@ var app = new Vue({
                 this.displaySuccess(`Modifications effectuées avec succès`)
                 this.$router.push('/account')
             } catch(error){
-                this.errorMessage(error)
-            }
+                if(error.response){
+                    this.errorMessage(error.response.data.message)
+                }            }
         },
         async deleteAccount(){
             try{
@@ -305,11 +343,10 @@ var app = new Vue({
                 this.user.email =""
                 this.user.username = ""
             } catch(error){
-                this.errorMessage(error)
+                if(error.response){
+                    this.errorMessage(error.response.data.message)
+                }            
             }
-        },
-        async deleteGame(){
-
         },
         async createTeam(team){
             try{
@@ -320,11 +357,13 @@ var app = new Vue({
                 this.myTeam.id = result.data.userTeam.team_id
                 this.myTeam.cash = result.data.userTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
                 this.user.hasRunningGame = true
+                this.calendar = result.data.calendar
                 this.displaySuccess('Partie créée !')
                 this.$router.push('/play')
             } catch(error){
-                console.log(error)
-                this.errorMessage(error)
+                if(error.response){
+                    this.errorMessage(error.response.data.message)
+                }            
             }
         },
         async getClubProfile(idClub){
@@ -340,7 +379,9 @@ var app = new Vue({
                     this.teamProfile = obj
                     this.$router.push('/play/team/'+idClub)
                 } catch(error){
-                    this.errorMessage(error)
+                    if(error.response){
+                        this.errorMessage(error.response.data.message)
+                    }
                 }
             }
         },
@@ -354,7 +395,9 @@ var app = new Vue({
                 this.ranking[idTeamInRanking].image = team.image
                 this.displaySuccess('Modification bien enregistrée !')
             } catch(error){
-                this.errorMessage(error)
+                if(error.response){
+                    this.errorMessage(error.response.data.message)
+                }
             }
         },
         async deleteGame(){
@@ -370,11 +413,15 @@ var app = new Vue({
                 this.myTeam.id = 0
                 this.myTeam.cash = "0"
                 this.user.hasRunningGame = false
-                this.ranking = []
+                this.recrutement =[]
+                this.calendar = []
+                this.weekOpponent = ""
                 this.$router.push('/')
                 this.displaySuccess('La partie a bien été supprimée')
             } catch(error){
-                this.errorMessage(error)
+                if(error.response){
+                    this.errorMessage(error.response.data.message)
+                }
             }
         },
         async recrutementPage(){
@@ -383,7 +430,9 @@ var app = new Vue({
                 this.$router.push('/play/recrutement')
                 this.recrutement = result.data
             } catch(error){
-                this.errorMessage(error)
+                if(error.response){
+                    this.errorMessage(error.response.data.message)
+                }
             }
         },
         async sellPlayer(idPlayer){
@@ -393,9 +442,14 @@ var app = new Vue({
                 this.myTeam.players.splice(indexPlayer, 1)
                 this.myTeam.cash = result.data.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
                 this.displaySuccess(`Joueur vendu à ${result.data.teamBuying[0].name}`)
+                if(this.myTeam.players.length < 5){
+                    this.weekOpponent = ""
+                }
             }
             catch(error){
-                this.errorMessage(error)
+                if(error.response){
+                    this.errorMessage(error.response.data.message)
+                }
             }
         },
         async editPlayer(player){
@@ -404,7 +458,9 @@ var app = new Vue({
                 this.myTeam.cash = result.data.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
                 this.displaySuccess('Modification effectuée avec succès')
             } catch(error){
-                this.errorMessage(error)
+                if(error.response){
+                    this.errorMessage(error.response.data.message)
+                }
             }
         },
         async buyPlayer(player_id){
@@ -420,7 +476,9 @@ var app = new Vue({
                 this.myTeam.players.push(player[0])
                 this.displaySuccess(`${player[0].firstname} ${player[0].name} fait maintenant parti de l'équipe`)
             } catch(error){
-                this.errorMessage(error)
+                if(error.response){
+                    this.errorMessage(error.response.data.message)
+                }
             }
         },
         async createPlayer(player){
@@ -429,10 +487,37 @@ var app = new Vue({
                 this.displaySuccess(`${player.firstName} ${player.name} fait maintenant parti de l'équipe`)
                 this.myTeam.cash = result.data.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
                 this.myTeam.players.push(result.data.playerAdded[0])
+                if(this.myTeam.players.length >= 5){
+                    this.findWeekOpponent();
+                }
             } catch(error){
-                console.log(error)
-                this.errorMessage(error)
+                if(error.response){
+                    this.errorMessage(error.response.data.message)
+                }
             }
+        },
+        async simulation(){
+            if(this.myTeam.players.length < 5){
+                this.errorMessage("Vous n'avez pas assez de joueurs pour lancer ce match")
+            }
+            try{
+                const result = await axios.get("/api/simulation")
+                const resultGame = await axios.get("/api/mygame")
+                this.ranking = resultGame.data.ranking
+                this.myTeam.players = resultGame.data.players
+                this.myTeam.name = resultGame.data.myTeam.name
+                this.myTeam.image = resultGame.data.myTeam.image
+                this.myTeam.id = resultGame.data.myTeam.team_id
+                this.myTeam.cash = resultGame.data.myTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+                this.recrutement = resultGame.data.playersFree
+                this.calendar = resultGame.data.calendar
+                this.findWeekOpponent()
+                this.$router.push("/play")
+            } catch(error){
+                if(error.response){
+                    this.errorMessage(error.response.data.message)
+                }
+            } 
         },
         async addTraining(){
             try{
