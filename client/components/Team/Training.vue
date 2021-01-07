@@ -13,9 +13,12 @@
                     <table>
                         <tbody>
                             <tr v-for="item in trainingweek" :key = "item.training_id"><td>
-                                <span>{{displayDay(item.day)}}</span>
-                                <span>  -  </span>
-                                <span>{{item.name}}</span>
+                                <div class ="week">
+                                    <span style="width:110px;display: inline-block">{{displayDay(item.day)}}</span>
+                                    <span style="width:50px;text-align:center; margin-right:25px">  -  </span>
+                                    <span>{{item.name}}</span>
+                                </div>    
+                                <i v-on:click="deleteTraining(item.training_id)" class="fas fa-times icon-close"></i>
                             </td></tr>
                         </tbody>
                     </table>
@@ -105,6 +108,10 @@
                         break             
                 }
                 return dayString  
+            },
+            deleteTraining(training_id){
+                let message = "Voulez-vous vraiment supprimer votre entrainement ?"
+                this.$emit('display-alert', message, "delete-training",training_id)
             }
         }
     }
@@ -143,7 +150,7 @@ table tr {
 
 table tr td {
     display: flex;
-    justify-content: left;
+    justify-content: space-between;
     align-items: center;
     flex-wrap: nowrap;
     color: var(--white);

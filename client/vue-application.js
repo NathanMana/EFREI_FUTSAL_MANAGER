@@ -152,6 +152,7 @@ var app = new Vue({
                 this.recrutement = resultGame.data.playersFree
                 this.calendar = resultGame.data.calendar
                 this.findWeekOpponent()
+                this.training = resultGame.data.training
             }
 
             //Si on recharge la page /play/team/:id, i lfaut  etre capable de récupérer les informations
@@ -208,6 +209,9 @@ var app = new Vue({
                 case "sell-player":
                     this.sellPlayer(data)
                     break;
+                case "delete-training":
+                    this.deleteTraining(data)
+                    break;    
             }
         },
         displayAlert(message, action, data){
@@ -277,6 +281,9 @@ var app = new Vue({
                     this.calendar = resultGame.data.calendar
                     this.recrutement = resultGame.data.playersFree
                     this.findWeekOpponent()
+                    if(resultGame.data.training){
+                        this.training = resultGame.data.training
+                    }
                     this.$router.push('/play/')
                 } else {
                     this.$router.push('/team/create')
@@ -310,6 +317,7 @@ var app = new Vue({
                 this.recrutement =[]
                 this.calendar = []
                 this.weekOpponent = ""
+                this.training=[]
                 this.$router.push('/')
             } catch(error){
                 if(error.response){
@@ -528,9 +536,22 @@ var app = new Vue({
                 this.training = result.data
                 this.displaySuccess('Entrainement ajouté !')
             } catch(error){
-                console.log(error)
-                this.errorMessage(error)
+                if(error.response){
+                    this.errorMessage(error.response.data.message)
+                }
             }
         },
+        async deleteTraining(training_id){
+            try{
+                await axios.delete("/api/training/delete/" + training_id)
+                let indexTraining = this.training.map(c => c.training_id).indexOf(training_id)
+                this.training.splice(indexTraining, 1)
+                this.displaySuccess('L\'entrainement a été supprimé !')
+            } catch(error){
+                if(error.response){
+                    this.errorMessage(error.response.data.message)
+                }
+            }
+        }
     }
 })

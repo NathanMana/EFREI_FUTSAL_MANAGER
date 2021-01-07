@@ -100,7 +100,7 @@ router.post('/login', async (req,res) => {
         req.session.user.hasRunningGame = true
         req.session.user.game = resultGame.rows[0].game_id
     }
-
+    
     res.json(req.session.user);
 })
 
@@ -519,15 +519,30 @@ router.get("/mygame", async (req,res) => {
             matchs: weekResult
         })
     }
-
+    //On récupère les entrainements
+    const weekSimulatingData = await client.query({
+        text: "SELECT * FROM weeks WHERE done = false ORDER BY week_id ASC LIMIT 1"
+    })
+    const weekSimulating = formateData(weekSimulatingData)
+    let training
+    if(weekSimulating.length >0){
+        const trainingData = await client.query({
+            text: "SELECT * FROM trainings WHERE week_id = $1 ORDER BY day asc",
+            values: [weekSimulating[0].week_id]
+        })
+        training = formateData(trainingData)
+    }
+    
+    
     const data = {
         ranking,
         myTeam,
         players,
         playersFree,
-        calendar
+        calendar,
+        training
     }
-
+    
     res.json(data)
 })
 
@@ -757,8 +772,8 @@ router.post("/player/create", async (req,res)=>{
     })
     //On récupère l'objet du joueur créé
     const player = await client.query({
-        text: "SELECT * FROM players WHERE name = $1 AND firstname = $2 AND age = $3 AND role = $4 AND endurance = $5 AND grade =$6 AND team_id = $7 AND game_id = $8 AND energie = $9",
-        values:[name,firstName,age,poste,endurance,note , team.rows[0].team_id, req.session.user.game, 100]
+        text: "SELECT * FROM players WHERE name = $1 AND firstname = $2 AND age = $3 AND role = $4 AND endurance = $5 AND grade =$6 AND team_id = $7 AND game_id = $8 AND energie = 100",
+        values:[name,firstName,age,poste,endurance,note , team.rows[0].team_id, req.session.user.game]
     })
     await client.query({
         text: "UPDATE teams SET cash=$1 WHERE team_id = $2",
@@ -931,6 +946,21 @@ router.get('/simulation', async (req, res) => {
     }
 
     res.json("ok")
+})
+
+router.delete("/training/delete/:training_id", async (req,res) => {
+    if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
+        res.status(403).json({message: "Accès non autorisé"})
+        return
+    }
+    const training_id = req.params.training_id
+    //On a juste a supprimer l'entrainement
+    await client.query({
+        text: "DELETE FROM trainings WHERE training_id = $1",
+        values: [training_id]
+    })
+
+    res.send("ok")
 })
 
 //fonction pour envoyer correctement les données (sans rows notamment)
