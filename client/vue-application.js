@@ -114,6 +114,7 @@ var app = new Vue({
         teamProfile: {},
         recrutement:[],
         calendar: [],
+        training: [],
         weekOpponent: "",
         alert: {
             displayDOMAlert: false,
@@ -519,9 +520,12 @@ var app = new Vue({
                 }
             } 
         },
-        async addTraining(){
+        async addTraining(training){
+            console.log(training)
             try{
-                const result = await axios.post("/api/team/training")
+                const result = await axios.post("/api/training/create",training)
+                console.log(result.data)
+                this.training = result.data
                 this.displaySuccess('Entrainement ajouté !')
             } catch(error){
                 console.log(error)

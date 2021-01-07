@@ -8,53 +8,24 @@
         </div>
         <div class="content">
             <div class="content-element" id="entrainement">
-                <article class="training" v-for="training in recrutement" :key="training.training_id">
-                    <h2 class="h2-table">Programme</h2>
+                <h2 class="h2-table">Programme</h2>
+                <article class="training">
                     <table>
                         <tbody>
-                            <tr><td>
-                                <span>{{training.day}}</span>
+                            <tr v-for="item in trainingweek" :key = "item.training_id"><td>
+                                <span>{{displayDay(item.day)}}</span>
                                 <span>  -  </span>
-                                <span>{{training.type}}</span>
-                            </td></tr>
-                            <tr><td>
-                                <span>Mardi</span>
-                                <span> - </span>
-                                <span>Training 1</span>
-                            </td></tr>
-                            <tr><td>
-                                <span>Mercredi</span>
-                                <span> - </span>
-                                <span>Training 1</span>
-                            </td></tr>
-                            <tr><td>
-                                <span>Jeudi</span>
-                                <span> - </span>
-                                <span>Training 1</span>
-                            </td></tr>
-                            <tr><td>
-                                <span>Vendredi</span>
-                                <span> - </span>
-                                <span>Training 1</span>
-                            </td></tr>
-                            <tr><td>
-                                <span>Samedi</span>
-                                <span> - </span>
-                                <span>Training 1</span>
-                            </td></tr>
-                            <tr><td>
-                                <span>Dimanche</span>
-                                <span> - </span>
-                                <span>Training 1</span>
+                                <span>{{item.name}}</span>
                             </td></tr>
                         </tbody>
                     </table>
                 </article>    
             </div>
             <div class="content-element" id="ajouter">    
-                <form class="style-train">
+                <form @submit.prevent="addTraining" class="style-train">
                     <h3>Ajouter un entrainement</h3>
-                    <input v-model="training.type" type="text" placeholder="Nom d'entrainement">
+                    <div v-show="error.state" class="error">{{error.message}}</div>
+                    <input v-model="training.name" type="text" placeholder="Nom d'entrainement">
                     <select  v-model="training.day">
                         <option value="" disabled selected>Jour</option>
                         <option value="1"> Lundi </option>
@@ -63,7 +34,6 @@
                         <option value="4"> Jeudi </option>
                         <option value="5"> Vendredi </option>
                         <option value="6"> Samedi </option>
-                        <option value="7"> Dimanche </option>
                     </select>
                     <button class="btn" type="submit">Ajouter</button>
                 </form>
@@ -75,12 +45,12 @@
 <script>
     module.exports = {
         props:{
-
+            trainingweek: Array
         },
         data () {
             return {
                 training: {
-                    type: "",
+                    name: "",
                     day: "",
                 },
                 error : {
@@ -96,17 +66,48 @@
                 if(!this.training.day){
                     this.error.message = "Veuillez sélectionner un jour"
                     this.error.state = true
+                    return
                 }
-                if(!this.training.type){
+                if(!this.training.name){
                     this.error.message = "Le nom de l'entrainement ne peut pas être nul"
                     this.error.state = true
+                    return
                 }
-
+                const index = this.trainingweek.map(t => t.day).indexOf(parseInt(this.training.day))
+                if(index != -1){
+                    this.error.message = "Un entrainement est déjà prévu pour ce jour, veuillez le supprimer si vous voulez le modifier"
+                    this.error.state = true
+                    return
+                }
                 if(!this.error.state)
-                    this.$emit('create-team', this.team)
+                    this.$emit('add-training', this.training)
             },
+            displayDay(day){
+                let dayString =""
+                switch(day){
+                    case 1: 
+                        dayString ="Lundi"
+                        break
+                    case 2: 
+                        dayString ="Mardi"
+                        break   
+                    case 3: 
+                        dayString ="Mercredi"
+                        break
+                    case 4: 
+                        dayString ="Jeudi"
+                        break    
+                    case 5: 
+                        dayString ="Vendredi"
+                        break   
+                    case 6: 
+                        dayString ="Samedi"
+                        break             
+                }
+                return dayString  
             }
         }
+    }
 </script>
 <style scoped>
 .style-table tbody tr:nth-child(2n){

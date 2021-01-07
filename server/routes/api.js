@@ -768,17 +768,41 @@ router.post("/player/create", async (req,res)=>{
 })
 
 //fonction pour ajouter un entrainement
-router.post("/training", async (req, res) => {
-    const { day, week_id} = req.body
-
+router.post("/training/create", async (req, res) => {
+    const {day, name} = req.body
+    //Récupérer la semaine en cours
+    const weekSimulatingData = await client.query({
+        text: "SELECT * FROM weeks WHERE done = false ORDER BY week_id ASC LIMIT 1"
+    })
+    const weekSimulating = formateData(weekSimulatingData)
+    
+    const trainingData = await client.query({
+        text: "SELECT * FROM trainings WHERE week_id = $1 ORDER BY day asc",
+        values: [weekSimulating[0].week_id]
+    })
+    let training = formateData(trainingData)
+    const index = training.map(t => t.day).indexOf(parseInt(day))
+    if(index != -1){
+        res.status(401).json({
+            message:"Un entrainement est déjà prévu pour ce jour, veuillez le supprimer si vous voulez le modifier"
+        })
+        return
+    }
     //On ajoute l'entrainement en BDD
     await client.query({
-        text: "UPDATE trainings SET day = $1, week_id = $3",
-        values: [day, training.rows[0].week_id]
+        text: "INSERT INTO trainings(day, week_id,name) VALUES ($1,$2,$3)",
+        values: [day, weekSimulating[0].week_id, name]
     })
-
-    res.json({training_id,day})
+    const trainingInsertedData = await client.query({
+        text: "SELECT * FROM trainings WHERE week_id = $1 AND day = $2 ",
+        values: [weekSimulating[0].week_id,day]
+    })
+    training.push(trainingInsertedData.rows[0])
+    training.sort((a,b)=>a.day-b.day)
+    res.json(training)
 })
+
+
 router.get('/simulation', async (req, res) => {
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
         res.status(403).json({message: "Accès non autorisé"})
