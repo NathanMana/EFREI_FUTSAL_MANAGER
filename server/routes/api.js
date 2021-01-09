@@ -803,6 +803,7 @@ router.post("/training/create", async (req, res) => {
 })
 
 
+/* SIMULATION */
 router.get('/simulation', async (req, res) => {
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
         res.status(403).json({message: "Accès non autorisé"})
