@@ -46,11 +46,11 @@
                 }
             },
             deleteAccount(){
-                let message = "Voulez-vous vraiment supprimer votre compte. Cette action est irrévocable et entrainera la perte de toutes vos données"
+                let message = "Voulez-vous vraiment supprimer votre compte ? Cette action est irrévocable et entrainera la perte de toutes vos données"
                 this.$emit('display-alert', message, "delete-account")
             },
             deleteGame(){
-                let message = "Voulez-vous vraiment supprimer la partie. Cette action entrainera la suppression de toutes les données et vous ne pourrez pas faire machine arrière"
+                let message = "Voulez-vous vraiment supprimer la partie ? Cette action entrainera la suppression de toutes les données et vous ne pourrez pas faire machine arrière"
                 this.$emit('display-alert', message, "delete-game")
             }
         }
