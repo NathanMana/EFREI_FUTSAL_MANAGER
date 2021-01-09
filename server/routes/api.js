@@ -6,7 +6,7 @@ const { Client } = require('pg')
 const client = new Client({
     user: 'postgres',
     host: 'localhost',
-    password: 'allforone187=ken',
+    password: 'root',
     database: 'EFREI_FUTSAL_MANAGER'
 })
 
@@ -270,13 +270,13 @@ router.post('/team/create', async (req, res) => {
     let cash = 0
     switch(req.body.difficulty){
         case "0":
-            cash = 50000000
+            cash = 100000000
             break
         case "1":
-            cash = 40000000
+            cash = 75000000
             break
         case "2":
-            cash = 30000000
+            cash = 50000000
             break
     }
 
@@ -615,6 +615,10 @@ router.delete("/game/delete", async (req,res) => {
         values: [req.session.user.game]
     })
 
+    //On retire de la session la partie en cours
+    delete req.session.user.game
+    req.session.user.hasRunningGame = false
+
     res.send("ok")
 })
 
@@ -760,7 +764,7 @@ router.post("/player/create", async (req,res)=>{
         values:[req.session.user.game]
     })
     //Calcul nouveau prix de notre équipe
-    let price = parseFloat(team.rows[0].cash) - (parseFloat(endurance) * 2000000 + parseFloat(note) * 10000000 - parseInt(age) * 500000)
+    let price = parseFloat(team.rows[0].cash) - (parseFloat(endurance) * 2000000 + parseFloat(note) * 10000000 - parseInt(age) * 250000)
     if (price < 0){
         res.status(401).json({message:"Vous n'avez pas assez d'argent pour créer ce joueur"})
         return
@@ -819,13 +823,14 @@ router.post("/training/create", async (req, res) => {
 
 
 /* SIMULATION */
-router.get('/simulation', async (req, res) => {
+router.post('/simulation', async (req, res) => {
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
         res.status(403).json({message: "Accès non autorisé"})
         return
     }
 
-    
+    const selectedPlayers = req.body //joueurs sélectionnés pour faire le match
+
     //On vérifie si l'équipe du joueur a assez de joueurs
     const teamUserData = await client.query({
         text: 'SELECT * FROM teams WHERE "isControlledByUser" = true AND game_id = $1',
@@ -833,10 +838,14 @@ router.get('/simulation', async (req, res) => {
     })
     const teamUser = formateData(teamUserData)
 
-    const playersOfUserTeam = await client.query({
-        text: 'SELECT * FROM players WHERE team_id = $1',
-        values: [teamUser[0].team_id]
+    //On récupère tous les joueurs du jeu et qui ont une équipe
+    const allPlayersData = await client.query({
+        text: "SELECT * FROM teams JOIN players ON teams.team_id = players.team_id WHERE teams.game_id = $1 ORDER BY players.team_id DESC;",
+        values: [req.session.user.game]
     })
+    const allPlayers = formateData(allPlayersData)
+
+    const playersOfUserTeam = allPlayers.filter(c => c.team_id === teamUser[0].team_id)
 
     if(playersOfUserTeam.rowCount < 5){
         res.status(401).json({message: "Vous n'avez pas assez de joueurs"})
@@ -849,28 +858,84 @@ router.get('/simulation', async (req, res) => {
     })
     const weekSimulating = formateData(weekSimulatingData)
 
+    //Tout d'abord on doit simuler les entrainements
+    const trainingsData = await client.query({
+        text: "SELECT * FROM trainings WHERE week_id = $1",
+        values: [weekSimulating[0].week_id]
+    })
+    const trainings = formateData(trainingsData)
+
+    for(let i = 0; i < 7; i++){
+        const isTrainingDay = trainings.find(c => c.day === (i+1))
+        if(isTrainingDay){
+            //Jour d'entrainement
+            playersOfUserTeam.forEach(async player => {
+                //On fatigue le joueur
+                player.energie = player.energie - ((1-(player.endurance/5))*player.energie*0.5)
+                //On lui ajoute des stats seulement s'il a moins de 33 ans et qu'il n'est pas trop fort
+                if(player.age < 33){
+                    if(player.endurance < 4.65){
+                        player.endurance = player.endurance + 0.25
+                    } else {
+                        player.endurance = 4.9
+                    }
+                    
+                    if(player.grade < 4.65){
+                        player.grade = player.grade + 0.25
+                    } else {
+                        player.grade = 4.9
+                    }
+                }
+    
+                if(player.energie < 0){
+                    player.energie = 0
+                }
+    
+                await client.query({
+                    text: "UPDATE players SET energie = $1, endurance = $2, grade = $3 WHERE player_id = $4",
+                    values: [player.energie, player.endurance, player.grade, player.player_id]
+                })
+            })
+        } else {
+            //Jour de repos (pour nous faciliter la tache, on juge que les jours de repos de notre équipe sont les jours de repos de toutes les équipes)
+            allPlayers.forEach(async player => {
+                player.energie = player.energie + player.endurance*3
+                if(player.energie > 100){
+                    player.energie = 100
+                } else if(player.energie < 0) {
+                    player.energie = 0
+                }
+                await client.query({
+                    text: "UPDATE players SET energie = $1 WHERE player_id = $2",
+                    values: [player.energie, player.player_id]
+                })
+            })
+        }    
+    }
+
     //Ensuite on récupère chaque match de la semaine à simuler
     const matchsData = await client.query({
         text: "SELECT * FROM matchs WHERE week_id = $1",
         values: [weekSimulating[0].week_id]
     })
     const matchs = formateData(matchsData)
-    console.log(matchs)
 
     for(let i = 0; i < matchs.length; i++){
         const match = matchs[i]
-        //Il faut récupérer les 2 équipes du match avec leurs joueurs
-        const informationsTeamDomicileData = await client.query({
-            text: "SELECT * FROM teams JOIN players ON teams.team_id = players.team_id WHERE teams.team_id = $1 ORDER BY players.team_id DESC LIMIT 5;",
-            values: [match.team_dom_id]
-        })
-        const informationsTeamDomicile = formateData(informationsTeamDomicileData)
+        //Il faut récupérer les 2 équipes du match avec leurs joueurs avec seulement 5 joueurs
+        let informationsTeamDomicile = []
+        if(match.team_dom_id === teamUser[0].team_id){
+            informationsTeamDomicile = allPlayers.filter(c => selectedPlayers.map(e => e.player_id).indexOf(c.player_id) != -1)
+        } else {
+            informationsTeamDomicile = allPlayers.filter(c => c.team_id === match.team_dom_id).slice(0, 5)
+        }
 
-        const informationsTeamExterieurData = await client.query({
-            text: "SELECT * FROM teams JOIN players ON teams.team_id = players.team_id WHERE teams.team_id = $1 ORDER BY players.team_id DESC LIMIT 5;",
-            values: [match.team_ext_id]
-        })
-        const informationsTeamExterieur = formateData(informationsTeamExterieurData)
+        let informationsTeamExterieur = []
+        if(match.team_ext_id === teamUser[0].team_id){
+            informationsTeamExterieur = allPlayers.filter(c => selectedPlayers.map(e => e.player_id).indexOf(c.player_id) != -1)
+        } else {
+            informationsTeamExterieur = allPlayers.filter(c => c.team_id === match.team_ext_id).slice(0, 5)
+        }
         
         //Il faut simuler le match en fonction des joueurs
         //On compare la somme des notes des joueurs 
@@ -891,26 +956,35 @@ router.get('/simulation', async (req, res) => {
 
         if(totalDom > totalExt){
             result = goalScoredByWinner + " - " + goalScoredByLoser
-            //On ajoute les 3 points a l'équipe a domicile
+            //On ajoute les 3 points a l'équipe a domicile et argent
             await client.query({
-                text: "UPDATE teams SET points = $1 WHERE team_id = $2",
-                values: [(informationsTeamDomicile[0].points + 3),informationsTeamDomicile[0].team_id]
+                text: "UPDATE teams SET points = $1, cash = $2 WHERE team_id = $3",
+                values: [(informationsTeamDomicile[0].points + 3), (parseInt(informationsTeamDomicile[0].cash) + 1000000),informationsTeamDomicile[0].team_id]
+            })
+            //Ajout argent equipe perdante
+            await client.query({
+                text: "UPDATE teams SET cash = $1 WHERE team_id = $2",
+                values: [(parseInt(informationsTeamExterieur[0].cash) + 250000),informationsTeamExterieur[0].team_id]
             })
         } else if(totalDom < totalExt){
             result = goalScoredByLoser + " - " + goalScoredByWinner
             await client.query({
-                text: "UPDATE teams SET points = $1 WHERE team_id = $2",
-                values: [(informationsTeamExterieur[0].points + 3),informationsTeamExterieur[0].team_id]
+                text: "UPDATE teams SET points = $1, cash = $2 WHERE team_id = $3",
+                values: [(informationsTeamExterieur[0].points + 3), (parseInt(informationsTeamExterieur[0].cash) + 1000000),informationsTeamExterieur[0].team_id]
+            })
+            await client.query({
+                text: "UPDATE teams SET cash = $1 WHERE team_id = $2",
+                values: [(parseInt(informationsTeamDomicile[0].cash) + 250000),informationsTeamDomicile[0].team_id]
             })
         } else {
             result = goalScoredByLoser + " - " + goalScoredByLoser
             await client.query({
-                text: "UPDATE teams SET points = $1 WHERE team_id = $2",
-                values: [(informationsTeamDomicile[0].points + 1),informationsTeamDomicile[0].team_id]
+                text: "UPDATE teams SET points = $1, cash = $2 WHERE team_id = $3",
+                values: [(informationsTeamDomicile[0].points + 1),(parseInt(informationsTeamDomicile[0].cash) + 250000),informationsTeamDomicile[0].team_id]
             })
             await client.query({
-                text: "UPDATE teams SET points = $1 WHERE team_id = $2",
-                values: [(informationsTeamExterieur[0].points + 1),informationsTeamExterieur[0].team_id]
+                text: "UPDATE teams SET points = $1, cash = $2 WHERE team_id = $3",
+                values: [(informationsTeamExterieur[0].points + 1),(parseInt(informationsTeamDomicile[0].cash) + 250000),informationsTeamExterieur[0].team_id]
             })
         } 
 
@@ -923,7 +997,10 @@ router.get('/simulation', async (req, res) => {
         //On fatigue les joueurs
         for(let k = 0; k < informationsTeamDomicile.length; k++){
             const player = informationsTeamDomicile[k]
-            const energie = player.energie - ( (1-((player.endurance-1)/5) )*player.energie)
+            let energie = player.energie - ( (1-((player.endurance-1)/5) )*player.energie)
+            if(energie < 0){
+                energie = 0
+            }
             await client.query({
                 text: "UPDATE players SET energie = $1 WHERE player_id = $2",
                 values: [Math.round(energie), player.player_id]
@@ -931,8 +1008,11 @@ router.get('/simulation', async (req, res) => {
         }
 
         for(let k = 0; k < informationsTeamExterieur.length; k++){
-            const player = informationsTeamDomicile[k]
-            const energie = player.energie - ( (1-((player.endurance-1)/5) )*player.energie)
+            const player = informationsTeamExterieur[k]
+            let energie = player.energie - ( (1-((player.endurance-1)/5) )*player.energie)
+            if(energie < 0){
+                energie = 0
+            }
             await client.query({
                 text: "UPDATE players SET energie = $1 WHERE player_id = $2",
                 values: [Math.round(energie), player.player_id]
@@ -944,8 +1024,9 @@ router.get('/simulation', async (req, res) => {
             text: "UPDATE weeks SET done = true WHERE week_id = $1",
             values: [weekSimulating[0].week_id]
         })
-    }
 
+    }
+    
     res.json("ok")
 })
 

@@ -21,6 +21,10 @@ html, body {
     height: 100%;
 }
 
+main {
+    padding-top: 5rem;
+}
+
 a {
     text-decoration: none;
     color: var(--white);
@@ -173,6 +177,7 @@ ul {
     width: 100%;
     display: block;
     margin: 5px 20px;
+    text-align: center;
 }
 
 .success {
@@ -221,7 +226,6 @@ nav {
     flex-wrap: nowrap;
     align-items: center;
     z-index: 11;
-    position: relative;
     height: 5rem;
 }
 
@@ -330,6 +334,11 @@ aside nav ul li {
 aside nav ul li a {
     padding: 5px;
     display: block;
+}
+
+.nav-fixed {
+    position: fixed;
+    top: 0;
 }
 
 @media screen and (max-width: 1600px){
@@ -576,4 +585,39 @@ form select option {
     padding: 12px;
     font-weight: 600;
     font-size: 1.32em;
+    position: fixed;
+    top: 5rem;
+    right: 0;
+}
+
+#simulation-article {
+    padding: 40px;
+}
+
+#simulation-article .article__title h2::after {
+    display: none;
+}
+
+.simulation {
+    width: 80%;
+    border: 2px solid var(--blue_light);
+    display: block;
+    margin: 0 auto;
+    height: 20px;
+}
+
+.simulation .loadingBar {
+    width: 100%;
+    background: var(--blue_light);
+    height: 100%;
+    animation: loadingBar 4s forwards ease-in-out;
+}
+
+@keyframes loadingBar {
+    0% {
+        width: 0%;
+    }
+    100% {
+        width: 100%;
+    }
 }

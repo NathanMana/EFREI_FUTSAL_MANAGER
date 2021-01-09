@@ -48,12 +48,11 @@
         },
         methods: {
             calcPrice(){     
-                let price = (parseFloat(this.player.endurance)*2000000 + parseFloat(this.player.note)*10000000) - parseInt(this.player.age)*500000
+                let price = (parseFloat(this.player.endurance)*2000000 + parseFloat(this.player.note)*10000000) - parseInt(this.player.age)*250000
                 if(isNaN(price)){
                     this.price = 0
                     return
-                }
-                
+                }               
                 this.price = price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
             },
             create_player(){
@@ -73,6 +72,18 @@
                 if(this.player.note >= 5 || this.player.note <= 0){
                     this.error.state = true
                     this.error.message = "La note générale doit être comprise entre 0.1 et 4.9"
+                    return
+                }
+
+                if(this.player.age > 70){
+                    this.error.state = true
+                    this.error.message = "Ce joueur est bien trop vieux, sa place est en tribune. Votre joueur doit avoir moins de 70 ans"
+                    return
+                }
+
+                if(parseInt(this.price) < 0){
+                    this.error.state = true
+                    this.error.message = "Ce jeu serait trop facile s'il était possible de gagner de l'argent ;)"
                     return
                 }
                 

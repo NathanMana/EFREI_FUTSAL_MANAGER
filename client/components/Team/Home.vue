@@ -1,6 +1,5 @@
 <template>
     <section id="home-team">
-        <router-view></router-view>
         <div class="title">
             <img v-if="myteam.image" :src="myteam.image" alt="">
             <h1>{{myteam.name}}</h1>

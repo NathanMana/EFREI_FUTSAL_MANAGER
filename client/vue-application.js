@@ -16,14 +16,8 @@ const Recrutement = window.httpVueLoader('./components/Team/Recrutement.vue')
 const Team = window.httpVueLoader('./components/Team/Team.vue')
 const Training = window.httpVueLoader('./components/Team/Training.vue')
 const Calendar = window.httpVueLoader('./components/Team/Calendar.vue')
-
-const children = [ 
-    {
-        path: 'play/simulation',
-        component: Simulation
-    },
-]
-
+const End = window.httpVueLoader('./components/Team/_End.vue')
+const Composition = window.httpVueLoader('./components/Team/_TeamComposition.vue')
 
 const routes = [
     { 
@@ -47,27 +41,22 @@ const routes = [
     { 
         path: '/account', 
         component: Account,
-        children
     },
     { 
         path: '/account/password/edit', 
         component: EditPassword, 
-        children
     },
     { 
         path: '/play/', 
         component: HomeTeam, 
-        children
     },
     { 
         path: '/play/ranking', 
         component: Ranking, 
-        children
     },
     { 
         path: '/play/team/:id', 
         component: TeamProfile, 
-        children
     },
     { 
         path: '/play/recrutement', 
@@ -76,7 +65,6 @@ const routes = [
     { 
         path: '/play/training', 
         component: Training, 
-        children
     },
     { 
         path: '/play/team', 
@@ -95,6 +83,10 @@ const router = new VueRouter({
 var app = new Vue({
     router,
     el: '#app',
+    components: {
+        End,
+        Composition
+    },
     data: {
         user: {
             id: 0,
@@ -130,7 +122,10 @@ var app = new Vue({
             message: "",
             state: false
         },
-        stateMenu: false
+        stateMenu: false,
+        displaySimulation: false,
+        displayComposition: false,
+        end: false
     },
     async mounted () {
         try{
@@ -144,7 +139,11 @@ var app = new Vue({
             if(this.user.hasRunningGame){
                 const resultGame = await axios.get("/api/mygame")
                 this.ranking = resultGame.data.ranking
-                this.myTeam.players = resultGame.data.players
+                let players = resultGame.data.players
+                players.forEach(player => {
+                    player.selected = false
+                })
+                this.myTeam.players = players
                 this.myTeam.name = resultGame.data.myTeam.name
                 this.myTeam.image = resultGame.data.myTeam.image
                 this.myTeam.id = resultGame.data.myTeam.team_id
@@ -176,6 +175,27 @@ var app = new Vue({
         }
     },
     methods: {
+        async restart(){
+            await axios.delete("/api/game/delete")
+            this.user.game = 0
+            this.user.hasRunningGame = false
+            this.ranking = []
+            this.myTeam.name = ""
+            this.myTeam.image = ""
+            this.myTeam.players = []
+            this.myTeam.id = 0
+            this.myTeam.cash = "0"
+            this.ranking = []
+            this.recrutement =[]
+            this.calendar = []
+            this.weekOpponent = ""
+            this.training=[]
+            this.end = false
+            this.$router.push('/team/create')
+        },
+        closeSideBar(){
+            this.stateMenu = false
+        },
         toggleMenu(){
             this.stateMenu = !this.stateMenu
         },
@@ -235,16 +255,21 @@ var app = new Vue({
         },
         findWeekOpponent(){
             const week = this.calendar.filter(w => w.done === false)
-            const match = week[0].matchs.find(c => c.team_dom_id === this.myTeam.id || c.team_ext_id === this.myTeam.id)
-            let opponentId = 0
-            if(match.team_dom_id === this.myTeam.id){
-                opponentId = match.team_ext_id
-            } else if(match.team_ext_id === this.myTeam.id) {
-                opponentId = match.team_dom_id
+            if(week.length > 0){
+                const match = week[0].matchs.find(c => c.team_dom_id === this.myTeam.id || c.team_ext_id === this.myTeam.id)
+                let opponentId = 0
+                if(match.team_dom_id === this.myTeam.id){
+                    opponentId = match.team_ext_id
+                } else if(match.team_ext_id === this.myTeam.id) {
+                    opponentId = match.team_dom_id
+                }
+    
+                const opponent = this.ranking.find(c => c.team_id === opponentId)
+                this.weekOpponent = opponent.name
+            } else {
+                //Plus de semaine donc terminé
+                this.end  = true
             }
-
-            const opponent = this.ranking.find(c => c.team_id === opponentId)
-            this.weekOpponent = opponent.name
         },
         displayWeekOpponent(){
             const voyelles = ["a",'e','i','o','u','y']
@@ -253,6 +278,9 @@ var app = new Vue({
             } else {
                 return this.weekOpponent
             }
+        },
+        closeEnd(){
+            this.end = false
         },
         async registration(user){
             try {
@@ -268,17 +296,25 @@ var app = new Vue({
         },
         async login(user){
             try {
+                console.log("cc")
                 const result = await axios.post('/api/login', user)
                 this.user = result.data
                 if(this.user.hasRunningGame){
                     const resultGame = await axios.get("/api/mygame")
                     this.ranking = resultGame.data.ranking
-                    this.myTeam.players = resultGame.data.players
+                    let players = resultGame.data.players
+                    players.forEach(player => {
+                        player.selected = false
+                    })
+                    this.myTeam.players = players
                     this.myTeam.id = resultGame.data.myTeam.team_id
                     this.myTeam.name = resultGame.data.myTeam.name
                     this.myTeam.image = resultGame.data.myTeam.image
                     this.myTeam.cash = resultGame.data.myTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
                     this.calendar = resultGame.data.calendar
+                    resultGame.data.playersFree.forEach(player => {
+                        player.selected = false
+                    })
                     this.recrutement = resultGame.data.playersFree
                     this.findWeekOpponent()
                     if(resultGame.data.training){
@@ -318,6 +354,7 @@ var app = new Vue({
                 this.calendar = []
                 this.weekOpponent = ""
                 this.training=[]
+                this.end = false
                 this.$router.push('/')
             } catch(error){
                 if(error.response){
@@ -347,10 +384,24 @@ var app = new Vue({
             try{
                 await axios.delete("/api/account/delete")
                 this.displaySuccess(`Suppression réussie. A la prochaine !`)
-                this.$router.push('/')
                 this.user.id = 0
                 this.user.email =""
                 this.user.username = ""
+                this.user.game = 0
+                this.user.hasRunningGame = false
+                this.ranking = []
+                this.myTeam.name = ""
+                this.myTeam.image = ""
+                this.myTeam.players = []
+                this.myTeam.id = 0
+                this.myTeam.cash = "0"
+                this.ranking = []
+                this.recrutement =[]
+                this.calendar = []
+                this.weekOpponent = ""
+                this.training=[]
+                this.end = false
+                this.$router.push('/')
             } catch(error){
                 if(error.response){
                     this.errorMessage(error.response.data.message)
@@ -367,6 +418,7 @@ var app = new Vue({
                 this.myTeam.cash = result.data.userTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
                 this.user.hasRunningGame = true
                 this.calendar = result.data.calendar
+                this.findWeekOpponent()
                 this.displaySuccess('Partie créée !')
                 this.$router.push('/play')
             } catch(error){
@@ -421,10 +473,11 @@ var app = new Vue({
                 this.myTeam.players = []
                 this.myTeam.id = 0
                 this.myTeam.cash = "0"
-                this.user.hasRunningGame = false
                 this.recrutement =[]
                 this.calendar = []
                 this.weekOpponent = ""
+                this.training = []
+                this.end = false
                 this.$router.push('/')
                 this.displaySuccess('La partie a bien été supprimée')
             } catch(error){
@@ -437,6 +490,9 @@ var app = new Vue({
             try{
                 const result = await axios.get("api/recrutement")
                 this.$router.push('/play/recrutement')
+                result.data.forEach(player => {
+                    player.selected = false
+                })
                 this.recrutement = result.data
             } catch(error){
                 if(error.response){
@@ -480,7 +536,7 @@ var app = new Vue({
                 this.myTeam.cash = result.data.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
                 //On supprime le joueur recruté dans les disponniblités du recrutement
                 let indexPlayer = this.recrutement.map(c => c.player_id).indexOf(player_id)
-                const player = this.recrutement.splice(indexPlayer, 1)
+                let player = this.recrutement.splice(indexPlayer, 1)
                 //On ajoute le joueur dans l'équipe
                 this.myTeam.players.push(player[0])
                 this.displaySuccess(`${player[0].firstname} ${player[0].name} fait maintenant parti de l'équipe`)
@@ -495,6 +551,7 @@ var app = new Vue({
                 const result = await axios.post("/api/player/create", player)
                 this.displaySuccess(`${player.firstName} ${player.name} fait maintenant parti de l'équipe`)
                 this.myTeam.cash = result.data.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+                result.data.playerAdded[0].selected = false
                 this.myTeam.players.push(result.data.playerAdded[0])
                 if(this.myTeam.players.length >= 5){
                     this.findWeekOpponent();
@@ -505,31 +562,49 @@ var app = new Vue({
                 }
             }
         },
-        async simulation(){
+        composition(){
             if(this.myTeam.players.length < 5){
                 this.errorMessage("Vous n'avez pas assez de joueurs pour lancer ce match")
+                return
             }
+            this.displayComposition = true
+        },
+        async simulation(){
+            this.displayComposition = false
             try{
-                const result = await axios.get("/api/simulation")
+                this.displaySimulation = true
+                //On récupère les joueurs sélectionnés
+                const selectedPlayers = this.myTeam.players.filter(c => c.selected ===true)
+                await axios.post("/api/simulation", selectedPlayers)
                 const resultGame = await axios.get("/api/mygame")
-                this.ranking = resultGame.data.ranking
-                this.myTeam.players = resultGame.data.players
-                this.myTeam.name = resultGame.data.myTeam.name
-                this.myTeam.image = resultGame.data.myTeam.image
-                this.myTeam.id = resultGame.data.myTeam.team_id
-                this.myTeam.cash = resultGame.data.myTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-                this.recrutement = resultGame.data.playersFree
-                this.calendar = resultGame.data.calendar
-                this.findWeekOpponent()
-                this.$router.push("/play")
+                setTimeout(() => {
+                    this.ranking = resultGame.data.ranking
+                    let players = resultGame.data.players
+                    players.forEach(player => {
+                        player.selected = false
+                    })
+                    this.myTeam.players = players
+                    this.myTeam.name = resultGame.data.myTeam.name
+                    this.myTeam.image = resultGame.data.myTeam.image
+                    this.myTeam.id = resultGame.data.myTeam.team_id
+                    this.myTeam.cash = resultGame.data.myTeam.cash.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+                    resultGame.data.playersFree.forEach(player => {
+                        player.selected = false
+                    })
+                    this.recrutement = resultGame.data.playersFree
+                    this.calendar = resultGame.data.calendar
+                    this.findWeekOpponent()
+                    this.displaySimulation = false
+                    this.$router.push("/play/calendar")
+                },4500)
             } catch(error){
+                this.displaySimulation = false
                 if(error.response){
                     this.errorMessage(error.response.data.message)
                 }
             } 
         },
         async addTraining(training){
-            console.log(training)
             try{
                 const result = await axios.post("/api/training/create",training)
                 console.log(result.data)

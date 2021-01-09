@@ -12,7 +12,7 @@
                 <article class="training">
                     <table>
                         <tbody>
-                            <tr v-for="item in trainingweek" :key = "item.training_id"><td>
+                            <tr v-for="item in trainingweek" :key = "item.training_id"><td style="padding-right:20px;">
                                 <div class ="week">
                                     <span style="width:110px;display: inline-block">{{displayDay(item.day)}}</span>
                                     <span style="width:50px;text-align:center; margin-right:25px">  -  </span>
@@ -26,7 +26,7 @@
             </div>
             <div class="content-element" id="ajouter">    
                 <form @submit.prevent="addTraining" class="style-train">
-                    <h3>Ajouter un entrainement</h3>
+                    <h3 style="font-size: 1.5em;">Ajouter un entrainement</h3>
                     <div v-show="error.state" class="error">{{error.message}}</div>
                     <input v-model="training.name" type="text" placeholder="Nom d'entrainement">
                     <select  v-model="training.day">

@@ -53,7 +53,7 @@
                     this.$emit('create-team', this.team)
             },
             redirection(){
-                router.back()
+                router.push("/")
             }
         }
     }

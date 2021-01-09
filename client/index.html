@@ -33,16 +33,16 @@
     </head>
     <body>
         <div id="app">
-          <nav v-if="!user.id">
+          <nav class="nav-fixed" v-if="!user.id">
             <router-link to='/' class="title">EFREI Futsal Manager</router-link>
             <ul>
               <li><router-link :to="{ path: 'login'}" append>Se connecter</router-link>
               <li><router-link :to="{ path: 'registration'}" append>S'inscrire</router-link></li>
             </ul>
           </nav>
-          <nav id="nav-connected" v-else-if="user.id && user.hasRunningGame">
+          <nav id="nav-connected" v-else-if="user.id && user.hasRunningGame" class="nav-fixed">
             <ul>
-              <li><a v-on:click="simulation" v-show="weekOpponent" router-link to='/play/simulation' id="nav-play">Jouer contre {{displayWeekOpponent()}}</a></li>
+              <li><a v-on:click="composition" v-show="weekOpponent" id="nav-play">Passer à la semaine suivante</a></li>
               <li class="nav-play-li"><router-link to='/play/team'>Equipe</router-link></li>
               <li class="nav-play-li"><router-link to='/play/training'>Entraînement</router-link></li>
               <li class="nav-play-li"><router-link to='/play/ranking'>Classement</router-link></li>
@@ -55,7 +55,7 @@
               <li><a id="logout" v-on:click="logout">Déconnexion</a></li>
             </ul>
           </nav>
-          <nav v-else>
+          <nav v-else class="nav-fixed">
             <router-link to='/' class="title">EFREI Futsal Manager</router-link>
             <ul>
               <li><a id="logout" v-on:click="logout">Déconnexion</a></li>
@@ -63,20 +63,20 @@
           </nav>
           <div v-if="user.hasRunningGame" class="absolute-top__right"><div id="cash">{{myTeam.cash}} €</div></div>
           <aside :class="{ 'open' : stateMenu }">
-            <nav v-if="!user.id">
+            <nav v-if="!user.id || !user.hasRunningGame">
               <ul>
-                <li><router-link :to="{ path: 'login'}" append>Se connecter</router-link>
-                <li><router-link :to="{ path: 'registration'}" append>S'inscrire</router-link ></li>
+                <li v-on:click="closeSideBar"><router-link :to="{ path: 'login'}" append>Se connecter</router-link>
+                <li v-on:click="closeSideBar"><router-link :to="{ path: 'registration'}" append>S'inscrire</router-link ></li>
               </ul>
             </nav>
             <nav id="nav-connected" v-else>
               <ul>
-                <li class="nav-play-li"><router-link to='/play/team'>Equipe</router-link></li>
-                <li class="nav-play-li"><router-link to='/play/training'>Entraînement</router-link></li>
-                <li class="nav-play-li"><router-link to='/play/ranking'>Classement</router-link></li>
-                <li class="nav-play-li"><a v-on:click="recrutementPage">Recrutement</a></li>
-                <li class="nav-play-li"><router-link to='/play/calendar'>Calendrier</router-link></li>
-                <li class="nav-play-li"><router-link to='/account'>Mon compte</router-link></li>
+                <li class="nav-play-li" v-on:click="closeSideBar"><router-link to='/play/team'>Equipe</router-link></li>
+                <li class="nav-play-li" v-on:click="closeSideBar"><router-link to='/play/training'>Entraînement</router-link></li>
+                <li class="nav-play-li" v-on:click="closeSideBar"><router-link to='/play/ranking'>Classement</router-link></li>
+                <li class="nav-play-li" v-on:click="closeSideBar"><a v-on:click="recrutementPage">Recrutement</a></li>
+                <li class="nav-play-li" v-on:click="closeSideBar"><router-link to='/play/calendar'>Calendrier</router-link></li>
+                <li class="nav-play-li" v-on:click="closeSideBar"><router-link to='/account'>Mon compte</router-link></li>
               </ul>
               <ul>
                 <li><a id="logout" v-on:click="logout">Déconnexion</a></li>
@@ -93,6 +93,7 @@
                :recrutement = "recrutement"
                :calendar = "calendar"
                :trainingweek ="training"
+               :end = "end"
                @display-alert="displayAlert"
                @registration="registration"
                @login = "login"
@@ -106,6 +107,7 @@
                @edit-player = "editPlayer"
                @buy-player = "buyPlayer"
                @add-training ="addTraining"
+               @close-end = "closeEnd"
             >
             </router-view>
           </main>
@@ -118,6 +120,16 @@
                 </div>
             </article>
           </section>
+          <section class="overlay" id="simulation_section" v-show="displaySimulation">
+            <article id="simulation-article">
+              <div class="article__title">
+                <h2>Simulation...</h2>
+            </div>
+            <div class="simulation">
+              <div class="loadingBar"></div>
+            </div>
+            </article>
+          </section>
           <section v-show="error.state" class="overlay">
             <article class="errorArticle">
                 <p style="text-align: center;font-size: 1.3em;">{{error.message}}</p>
@@ -126,6 +138,8 @@
                 </div>
             </article>
           </section>
+          <composition v-show="displayComposition" @close="displayComposition = false" @simulation="simulation" :team = "myTeam"></composition>
+          <end @close-end="closeEnd" @restart="restart" :ranking="ranking" :team="myTeam" v-show="end" :end="end"></end>
           <div v-bind:class="{'success': success.state}">{{success.message}}</div>
         </div>
         <script src="/vue-application.js"></script>

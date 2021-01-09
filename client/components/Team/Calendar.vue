@@ -25,7 +25,8 @@
     module.exports = {
         props: {
             calendar: Array,
-            ranking: Array
+            ranking: Array,
+            myteam: Object
         },
         data () {
             return {
