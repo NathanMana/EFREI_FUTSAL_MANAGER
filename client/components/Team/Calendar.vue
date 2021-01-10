@@ -12,9 +12,9 @@
                     <span>{{displayDayMatch(index + 1)}} journée</span>
                 </div>
                 <div v-for="match in week.matchs" :key="match.team_dom_id" class="article-content">
-                    <span><img :src="displayTeamImage(match.team_dom_id)" alt=""> {{displayTeamName(match.team_dom_id)}}</span>
+                    <span v-on:click="getClubProfile(match.team_dom_id)"><img :src="displayTeamImage(match.team_dom_id)" alt=""> {{displayTeamName(match.team_dom_id)}}</span>
                     <span>{{displayMatchResult(match.result)}}</span>
-                    <span>{{displayTeamName(match.team_ext_id)}} <img :src="displayTeamImage(match.team_ext_id)" alt=""></span>
+                    <span v-on:click="getClubProfile(match.team_ext_id)">{{displayTeamName(match.team_ext_id)}} <img :src="displayTeamImage(match.team_ext_id)" alt=""></span>
                 </div>
             </article>
         </div>
@@ -59,6 +59,9 @@
                 } else {
                     return result
                 }
+            },
+            getClubProfile(id){
+                this.$emit('get-club-profile', id)
             }
         }
     }
@@ -101,6 +104,7 @@
 
     .article-content span {
         width: 250px;
+        cursor: pointer;
     }
 
     .article-content span:nth-child(2){

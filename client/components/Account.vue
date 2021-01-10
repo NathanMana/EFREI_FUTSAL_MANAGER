@@ -14,7 +14,7 @@
 
         <div class="footer-btn">
             <router-link to="/account/password/edit" class="btn">Modifier le mot de passe</router-link>
-            <a v-on:click="deleteGame" class="btn btn-delete">Supprimer la partie</a>
+            <a v-on:click="deleteGame" v-show="user.hasRunningGame" class="btn btn-delete">Supprimer la partie</a>
             <a v-on:click="deleteAccount" class="btn btn-delete">Supprimer le compte</a>
         </div>
     </section>
