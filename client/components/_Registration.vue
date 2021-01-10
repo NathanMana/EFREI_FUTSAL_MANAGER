@@ -11,8 +11,14 @@
                 <div v-show="errorUsername.state" class="error">{{errorUsername.message}}</div>
                 <input v-model="user.username" type="text" placeholder="Pseudo" name="" id="">
                 <div v-show="errorPassword.state" class="error">{{errorPassword.message}}</div>
+                <ul>
+                    <li :class="{'good':passwordRequirements.length}">8 caractères minimum</li>
+                    <li :class="{'good':passwordRequirements.number}">Un chiffre minimum</li>
+                    <li :class="{'good':passwordRequirements.letter}">Une lettre minimum</li>
+                    <li :class="{'good':passwordRequirements.specialCaracter}">Un caractère spécial minimum</li>
+                </ul>
                 <div class="input-password">
-                    <input v-model="user.password" :type="passwordType" name="" id="" placeholder="Mot de passe">
+                    <input v-model="user.password" v-on:keyup="checkPassword" :type="passwordType" name="" id="password" placeholder="Mot de passe">
                     <i v-on:click="togglePassword" class="fas fa-eye toggle-password"></i>
                 </div>
                 <div v-show="errorPasswordConfirmation.state" class="error">{{errorPasswordConfirmation.message}}</div>
@@ -55,7 +61,13 @@
                     state: false
                 },
                 passwordType: "password",
-                repeatPasswordType: "password"
+                repeatPasswordType: "password",
+                passwordRequirements : {
+                    length: false,
+                    number: false,
+                    letter: false,
+                    specialCaracter: false
+                }
             }
         },
         methods: {
@@ -89,7 +101,6 @@
                     this.errorPassword.state = true
                     errors = true
                 }
-                console.log(errors)
                 if(!errors){
                     this.$emit('registration', this.user)
                 }
@@ -110,7 +121,43 @@
                 } else {
                     this.repeatPasswordType = "password"
                 }
+            },
+            checkPassword() {
+                if (this.user.password.length >= 8){
+                    this.passwordRequirements.length = true
+                } else {
+                    this.passwordRequirements.length = false
+                }
+
+                if (this.user.password.match(/^(?=.*[a-zA-Z])/g)){
+                    this.passwordRequirements.letter = true
+                } else {
+                    this.passwordRequirements.letter = false
+                }
+
+                if (this.user.password.match(/^(?=.*[0-9])/g)){
+                    this.passwordRequirements.number = true
+                }else {
+                    this.passwordRequirements.number = false
+                }
+
+                if (this.user.password.match(/^(?=.*[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?])/g)){
+                    this.passwordRequirements.specialCaracter = true
+                }else {
+                    this.passwordRequirements.specialCaracter = false
+                }
             }
         }
     }
 </script>
+<style scoped>
+    ul {
+        width: 100%;
+        padding-left: 20px;
+        padding-bottom: 5px;
+    }
+
+    .good {
+        color: var(--blue_light);
+    }
+</style>

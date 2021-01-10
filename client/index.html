@@ -42,7 +42,7 @@
           </nav>
           <nav id="nav-connected" v-else-if="user.id && user.hasRunningGame" class="nav-fixed">
             <ul>
-              <li><a v-on:click="composition" v-show="weekOpponent" id="nav-play">Passer à la semaine suivante</a></li>
+              <li><a v-on:click="composition" v-show="!end" id="nav-play">Passer à la semaine suivante</a></li>
               <li class="nav-play-li"><router-link to='/play/team'>Equipe</router-link></li>
               <li class="nav-play-li"><router-link to='/play/training'>Entraînement</router-link></li>
               <li class="nav-play-li"><router-link to='/play/ranking'>Classement</router-link></li>

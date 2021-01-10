@@ -101,6 +101,11 @@ p, span, ul, li {
     display: block;
     cursor: pointer;
     white-space: nowrap;
+    transition: 0.2s;
+}
+
+.btn:hover {
+    background: #24c2c2ab;
 }
 
 button.btn {
@@ -113,6 +118,11 @@ ul {
 
 .btn.btn-delete {
     background: var(--danger)!important;
+    transition: 0.2s;
+}
+
+.btn.btn-delete:hover {
+    background: #c2245eb2!important;
 }
 
 .h2-table {
@@ -247,7 +257,7 @@ nav #nav-play {
     font-weight: 700;
     border: 2px solid var(--white);
     border-radius: 40px;
-    display: block;
+    display: flex;
 }
 
 #menu-responsive {
@@ -341,6 +351,40 @@ aside nav ul li a {
     top: 0;
 }
 
+.nav-play-li a {
+    transition: 0.25s;
+}
+
+.nav-play-li a:hover {
+    color: var(--blue_semi_dark);
+    opacity: 0.8;
+}
+
+#nav-play {
+    transition: 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+#nav-play:hover::after {
+    width: 100%;
+}
+
+#nav-play::after {
+    position: absolute;
+    content: "";
+    background: var(--blue_semi_dark);
+    left: 0;
+    width: 0%;
+    height: 100%;
+    top: 0;
+    border-radius: 40px;
+    z-index: -1;
+    transition: 1.5s ease-in-out;
+}
+
+
+
 @media screen and (max-width: 1600px){
     .nav-play-li {
         display: none;
@@ -362,6 +406,16 @@ aside nav ul li a {
     }
     aside nav #logout {
         display: initial;
+    }
+}
+
+@media screen and (max-width: 1199px){
+    .content {
+        justify-content: center!important;
+    }
+    .h2-table {
+        display: block;
+        margin: 0 auto;
     }
 }
 

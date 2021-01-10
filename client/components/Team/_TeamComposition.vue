@@ -11,7 +11,7 @@
                 <tbody>
                     <tr :class="{'player-selected': player.selected}" v-on:click="selectPlayer(player.player_id)" v-for="player in team.players" :key="player.player_id">
                         <td>
-                            <span class="style-rect">{{player.energie}}</span>
+                            <span class="style-rect">{{Math.round(player.energie * 100) / 100}}%</span>
                             <span class="table-content">{{player.firstname}} <span style="text-transform:uppercase;">{{player.name}}</span></span>
                         </td>
                     </tr>

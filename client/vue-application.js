@@ -578,6 +578,7 @@ var app = new Vue({
                 await axios.post("/api/simulation", selectedPlayers)
                 const resultGame = await axios.get("/api/mygame")
                 setTimeout(() => {
+                    this.training = []
                     this.ranking = resultGame.data.ranking
                     let players = resultGame.data.players
                     players.forEach(player => {

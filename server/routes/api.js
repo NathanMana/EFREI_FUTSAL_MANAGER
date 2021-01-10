@@ -791,7 +791,8 @@ router.post("/training/create", async (req, res) => {
     const {day, name} = req.body
     //Récupérer la semaine en cours
     const weekSimulatingData = await client.query({
-        text: "SELECT * FROM weeks WHERE done = false ORDER BY week_id ASC LIMIT 1"
+        text: "SELECT * FROM weeks WHERE done = false AND game_id = $1 ORDER BY week_id ASC LIMIT 1",
+        values: [req.session.user.game]
     })
     const weekSimulating = formateData(weekSimulatingData)
     
@@ -854,7 +855,8 @@ router.post('/simulation', async (req, res) => {
 
     //Récupérer la semaine en cours
     const weekSimulatingData = await client.query({
-        text: "SELECT * FROM weeks WHERE done = false ORDER BY week_id ASC LIMIT 1"
+        text: "SELECT * FROM weeks WHERE done = false AND game_id = $1 ORDER BY week_id ASC LIMIT 1",
+        values: [req.session.user.game]
     })
     const weekSimulating = formateData(weekSimulatingData)
 

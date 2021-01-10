@@ -13,7 +13,7 @@
                     <tr v-for="player in myplayers" :key="player.player_id">
                         <td>
                             <div class="content-td">
-                                <span class="style-rect">{{player.energie}}%</span>
+                                <span class="style-rect">{{Math.round(player.energie * 100) / 100}}%</span>
                                 <span class="table-content">{{player.firstname}} <span style="text-transform:uppercase;">{{player.name}}</span></span>
                             </div>
                             <div class="td-action">

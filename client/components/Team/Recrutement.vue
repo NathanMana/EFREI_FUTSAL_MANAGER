@@ -13,8 +13,7 @@
                     <span v-else style="background:#4caf50;">J</span>
                 </div>
                 <img :src="player.image" v-if="player.image">
-                <!-- Lumière vecteur créé par upklyak - fr.freepik.com -->
-                <img src="../../images/frontend/avatar_player.jpg" v-else>
+                <img src="../../images/frontend/avatar_player.jpg" alt="Lumière vecteur créé par upklyak - fr.freepik.com" v-else>
                 <h2 class="h2-content"> {{player.name}} </h2>
                 <div class="article-content">
                     <div class="article-content-item">
