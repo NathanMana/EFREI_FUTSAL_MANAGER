@@ -6,6 +6,7 @@
         <div class="title">
             <h1>Entrainement</h1>
         </div>
+        <p>Les entrainements permettent à vos joueurs de s'améliorer ou de rester en forme pour les plus vieux. Grâce aux entrainements ils gagnent en endurance et niveau de jeu général. Attention ! Les jours de repos comptent, un abus d'entrainement épuisera vos joueurs et ils ne seront donc pas en forme pour le match du dimanche !</p>
         <div class="content">
             <div class="content-element" id="entrainement">
                 <h2 class="h2-table">Programme</h2>
@@ -161,6 +162,12 @@ table tr td {
 }
 span {
     margin: 0 10px;
+}
+
+p {
+    margin: 40px 40px 0 40px;
+    text-align: center;
+    font-size: 1.4em;
 }
 
 table tbody tr:nth-child(2n+1){

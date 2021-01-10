@@ -5,7 +5,7 @@
                 <h2>Composition d'équipe</h2>
                 <i v-on:click="close" class="fas fa-times icon-close"></i>
             </div>
-            <span style="margin: 20px auto;display:block;text-align:center;font-size:1.2em;">Choisissez les 5 joueurs qui participeront au match (il faut cliquer dessus)</span>
+            <span style="margin: 20px auto;display:block;text-align:center;font-size:1.2em;">Vous allez simuler la semaine en cours. La simulation comprend les entrainements et le match. Choisissez les 5 joueurs qui participeront à la rencontre de dimanche (il faut cliquer dessus). Jouer un match épuise beaucoup les joueurs, choisissez bien !</span>
             <div v-show="error.state" class="error">{{error.message}}</div>
             <table class="style-table">
                 <tbody>

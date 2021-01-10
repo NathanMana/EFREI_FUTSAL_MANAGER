@@ -269,6 +269,7 @@ var app = new Vue({
             } else {
                 //Plus de semaine donc terminé
                 this.end  = true
+                this.weekOpponent = ""
             }
         },
         displayWeekOpponent(){
