@@ -21,7 +21,7 @@ router.post('/registration', async (req, res) => {
     let username = req.body.username
 
     if(!email || !password  || !username){
-        res.status(401).json({message: 'Problème dans le formulaire'})
+        res.status(500).json({message: 'Problème dans le formulaire'})
         return
     }
 
@@ -31,12 +31,12 @@ router.post('/registration', async (req, res) => {
     })
 
     if(result.rows.length > 0){
-        res.status(401).json({message: 'Cette adresse email existe déjà dans notre base de données'})
+        res.status(500).json({message: 'Cette adresse email existe déjà dans notre base de données'})
         return
     }
 
     if(password.length < 8 || !password.match(/^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?])/g)){
-        res.status(401).json({message: 'Le mot de passe ne remplit pas les critères de sécurité'})
+        res.status(500).json({message: 'Le mot de passe ne remplit pas les critères de sécurité'})
         return
     }
 
@@ -60,7 +60,7 @@ router.post('/login', async (req,res) => {
 
     //On vérifie si l'email ou le mdp ne sont pas nuls
     if(!email || !password){
-        res.status(401).json({message: "Problème dans le formulaire"})
+        res.status(500).json({message: "Problème dans le formulaire"})
         return
     }
 
@@ -72,14 +72,14 @@ router.post('/login', async (req,res) => {
 
     //Si pas d'utilisateur alors les identifiants sont incorrects
     if(result.rows.length === 0){
-        res.status(401).json({message: "Identifiants incorrects"})
+        res.status(500).json({message: "Identifiants incorrects"})
         return
     }
 
     const user = result.rows[0]
     const correspondingPassword = await bcrypt.compare(password, user.password)
     if(!correspondingPassword){
-        res.status(401).json({message: "Identifiants incorrects"})
+        res.status(500).json({message: "Identifiants incorrects"})
         return
     }
 
@@ -140,7 +140,7 @@ router.get('/logout', async (req, res) => {
 router.post('/account/edit', async (req, res) => {
 
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
-        res.status(403).json({message: "Accès non autorisé"})
+        res.status(401).json({message: "Accès non autorisé"})
         return
     }
 
@@ -150,13 +150,13 @@ router.post('/account/edit', async (req, res) => {
     
     //On vérifie que l'utilisateur soit bien connecté
     if(!id || id <= 0 ){
-        res.status(501).json({message: "Vous ne pouvez pas réaliser ça"})
+        res.status(500).json({message: "Vous ne pouvez pas réaliser ça"})
         return
     }
 
     //On vérifie que ca ne soit pas nul
     if(!email || !username){
-        res.status(401).json({message: "Les champs ne peuvent pas être vides"})
+        res.status(500).json({message: "Les champs ne peuvent pas être vides"})
         return
     }
 
@@ -177,7 +177,7 @@ router.post('/account/edit', async (req, res) => {
 router.post('/account/edit-password', async (req, res) => {
 
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
-        res.status(403).json({message: "Accès non autorisé"})
+        res.status(401).json({message: "Accès non autorisé"})
         return
     }
 
@@ -187,7 +187,7 @@ router.post('/account/edit-password', async (req, res) => {
     
     //On vérifie que le nouveau mdp et la répétition soit égaux
     if(newPassword != repeatNewPassword){
-        res.status(401).json({message: "Les mots de passes indiqués sont différents"})
+        res.status(500).json({message: "Les mots de passes indiqués sont différents"})
         return
     }
 
@@ -199,13 +199,13 @@ router.post('/account/edit-password', async (req, res) => {
 
     const correspondingPassword = await bcrypt.compare(currentPassword, result.rows[0].password)
     if(!correspondingPassword){
-        res.status(401).json({message: "Le mot de passe indiqué est incorrect"})
+        res.status(500).json({message: "Le mot de passe indiqué est incorrect"})
         return
     }
 
     //On vérifie que le nouveau mot de passe respecte les conditions
     if(newPassword.length < 8 || !newPassword.match(/^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?])/g)){
-        res.status(401).json({message: 'Le mot de passe ne remplit pas les critères de sécurité'})
+        res.status(500).json({message: 'Le mot de passe ne remplit pas les critères de sécurité'})
         return
     }
 
@@ -238,14 +238,14 @@ router.delete('/account/delete', async (req, res) => {
 /* CREATION D UNE EQUIPE ET DONC DE LA PARTIE */
 router.post('/team/create', async (req, res) => {
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
-        res.status(403).json({message: "Accès non autorisé"})
+        res.status(401).json({message: "Accès non autorisé"})
         return
     }
 
     const name = req.body.name
     const logo = req.body.image
     if(!name || !req.body.difficulty){
-        res.status(401).json({message: "Le formulaire est mal rempli"})
+        res.status(500).json({message: "Le formulaire est mal rempli"})
         return
     }
 
@@ -354,10 +354,9 @@ router.post('/team/create', async (req, res) => {
     })
 
     players.rows.forEach(async player => {
-        const endurance = randomInt(6) //Temporaire
         await client.query({
             text: 'INSERT INTO players(name, firstname, age, role, image, endurance, energie, grade, team_id, game_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, null, $9)',
-            values: [player.name, player.firstname, player.age, player.role, player.image, endurance, 100, player.grade, req.session.user.game]
+            values: [player.name, player.firstname, player.age, player.role, player.image, player.endurance, 100, player.grade, req.session.user.game]
         })
     })
 
@@ -459,7 +458,7 @@ router.post('/team/create', async (req, res) => {
 //Le contenu de la page recrutement
 router.get("/mygame", async (req,res) => {
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
-        res.status(403).json({message: "Accès non autorisé"})
+        res.status(401).json({message: "Accès non autorisé"})
         return
     }
 
@@ -470,7 +469,7 @@ router.get("/mygame", async (req,res) => {
     })
 
     if(game.rowCount === 0){
-        res.status(401).json({message: "Il n'y a pas de partie en cours"})
+        res.status(500).json({message: "Il n'y a pas de partie en cours"})
         return
     }
     req.session.user.game = game.rows[0].game_id
@@ -549,7 +548,7 @@ router.get("/mygame", async (req,res) => {
 /* Profil d'un club */
 router.get('/team/:idTeam', async (req,res) => {
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
-        res.status(403).json({message: "Accès non autorisé"})
+        res.status(401).json({message: "Accès non autorisé"})
         return
     }
 
@@ -568,11 +567,12 @@ router.get('/team/:idTeam', async (req,res) => {
 /* RECRUTEMENT */
 router.get("/recrutement", async (req,res) => {
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
-        res.status(403).json({message: "Accès non autorisé"})
+        res.status(401).json({message: "Accès non autorisé"})
         return
     }
     const players = await client.query({
-        text: 'SELECT * FROM players WHERE team_id IS NULL',
+        text: 'SELECT * FROM players WHERE team_id IS NULL AND game_id = $1',
+        values: [req.session.user.game]
     })
     res.json(formateData(players))
 })
@@ -580,7 +580,7 @@ router.get("/recrutement", async (req,res) => {
 /* Modifier le nom ou l'image de notre équipe */
 router.post('/team/edit', async (req,res) => {
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
-        res.status(403).json({message: "Accès non autorisé"})
+        res.status(401).json({message: "Accès non autorisé"})
         return
     }
 
@@ -589,7 +589,7 @@ router.post('/team/edit', async (req,res) => {
     const image = req.body.image
 
     if(!name){
-        res.status(401).json({message: "Le nom ne peut pas être vide"})
+        res.status(500).json({message: "Le nom ne peut pas être vide"})
         return
     }
 
@@ -605,7 +605,7 @@ router.post('/team/edit', async (req,res) => {
 //Supprime toutes les données d'une partie (équipes, joueurs, etc)
 router.delete("/game/delete", async (req,res) => {
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
-        res.status(403).json({message: "Accès non autorisé"})
+        res.status(401).json({message: "Accès non autorisé"})
         return
     }
 
@@ -625,7 +625,7 @@ router.delete("/game/delete", async (req,res) => {
 /* VENDRE UN JOUEUR */
 router.post("/player/sell", async (req,res) => {
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
-        res.status(403).json({message: "Accès non autorisé"})
+        res.status(401).json({message: "Accès non autorisé"})
         return
     }
 
@@ -670,7 +670,7 @@ router.post("/player/sell", async (req,res) => {
 //Si on modifie simplement le nom il n'y a pas de complication, en revanche, si on modifie la note par exemple, il va falloir payer
 router.post("/player/edit", async (req, res) => {
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
-        res.status(403).json({message: "Accès non autorisé"})
+        res.status(500).json({message: "Accès non autorisé"})
         return
     }
 
@@ -696,7 +696,7 @@ router.post("/player/edit", async (req, res) => {
     const cash = parseFloat(team.rows[0].cash) + cost
     if(cash < 0){
         //L'utilisateur n'a pas assez d'argent pour effectuer cette action
-        res.status(401).json({message: "Vous n'avez pas assez d'argent pour effectuer cette action"})
+        res.status(500).json({message: "Vous n'avez pas assez d'argent pour effectuer cette action"})
         return
     }
 
@@ -719,7 +719,7 @@ router.post("/player/edit", async (req, res) => {
 
 router.post("/player/buy", async (req,res)=>{
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
-        res.status(403).json({message: "Accès non autorisé"})
+        res.status(401).json({message: "Accès non autorisé"})
         return
     }
     const id_player = req.body.player
@@ -741,7 +741,7 @@ router.post("/player/buy", async (req,res)=>{
     //Calcul nouveau prix de notre équipe
     let price = team.rows[0].cash - (player.endurance * 2000000 + player.grade * 10000000 - player.age * 500000)
     if (price < 0){
-        res.status(401).json({message:"Vous n'avez pas assez d'argent"})
+        res.status(500).json({message:"Vous n'avez pas assez d'argent"})
         return
     }
     await client.query({
@@ -755,7 +755,7 @@ router.post("/player/buy", async (req,res)=>{
 
 router.post("/player/create", async (req,res)=>{
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
-        res.status(403).json({message: "Accès non autorisé"})
+        res.status(401).json({message: "Accès non autorisé"})
         return
     }
     const { name,firstName,age,poste,endurance,note } = req.body
@@ -766,7 +766,7 @@ router.post("/player/create", async (req,res)=>{
     //Calcul nouveau prix de notre équipe
     let price = parseFloat(team.rows[0].cash) - (parseFloat(endurance) * 2000000 + parseFloat(note) * 10000000 - parseInt(age) * 250000)
     if (price < 0){
-        res.status(401).json({message:"Vous n'avez pas assez d'argent pour créer ce joueur"})
+        res.status(500).json({message:"Vous n'avez pas assez d'argent pour créer ce joueur"})
         return
     }
     //On ajoute notre nouveau joueur à notre équipe
@@ -803,7 +803,7 @@ router.post("/training/create", async (req, res) => {
     let training = formateData(trainingData)
     const index = training.map(t => t.day).indexOf(parseInt(day))
     if(index != -1){
-        res.status(401).json({
+        res.status(500).json({
             message:"Un entrainement est déjà prévu pour ce jour, veuillez le supprimer si vous voulez le modifier"
         })
         return
@@ -826,7 +826,7 @@ router.post("/training/create", async (req, res) => {
 /* SIMULATION */
 router.post('/simulation', async (req, res) => {
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
-        res.status(403).json({message: "Accès non autorisé"})
+        res.status(401).json({message: "Accès non autorisé"})
         return
     }
 
@@ -849,7 +849,7 @@ router.post('/simulation', async (req, res) => {
     const playersOfUserTeam = allPlayers.filter(c => c.team_id === teamUser[0].team_id)
 
     if(playersOfUserTeam.rowCount < 5){
-        res.status(401).json({message: "Vous n'avez pas assez de joueurs"})
+        res.status(500).json({message: "Vous n'avez pas assez de joueurs"})
         return
     }
 
@@ -1034,7 +1034,7 @@ router.post('/simulation', async (req, res) => {
 
 router.delete("/training/delete/:training_id", async (req,res) => {
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
-        res.status(403).json({message: "Accès non autorisé"})
+        res.status(401).json({message: "Accès non autorisé"})
         return
     }
     const training_id = req.params.training_id
