@@ -45,8 +45,10 @@
                     this.price = 0
                     return
                 } else if(price < 0){
+                    price = Math.round(price * 100) / 100
                     this.price = price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
                 } else if(price >= 0){
+                    price = Math.round(price * 100) / 100
                     this.price = "+ " + price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
                 }    
             },

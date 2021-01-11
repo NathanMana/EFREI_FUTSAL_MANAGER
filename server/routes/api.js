@@ -670,7 +670,7 @@ router.post("/player/sell", async (req,res) => {
 //Si on modifie simplement le nom il n'y a pas de complication, en revanche, si on modifie la note par exemple, il va falloir payer
 router.post("/player/edit", async (req, res) => {
     if(!req.session.user || !req.session.user.id || req.session.user.id <= 0){
-        res.status(500).json({message: "Accès non autorisé"})
+        res.status(401).json({message: "Accès non autorisé"})
         return
     }
 
@@ -682,6 +682,11 @@ router.post("/player/edit", async (req, res) => {
         values: [player_id]
     })
 
+    if(!playerResult.rows[0]){
+        res.status(500).json({message: "Problème"})
+        return
+    }
+
     const player = playerResult.rows[0]
 
     //On calcule les retombés ou le cout du changement
@@ -689,8 +694,8 @@ router.post("/player/edit", async (req, res) => {
 
     //On modifie le cash de l'équipe
     const team = await client.query({
-        text: "SELECT * FROM teams WHERE team_id = $1",
-        values: [team_id]
+        text: 'SELECT * FROM teams WHERE game_id = $1 AND "isControlledByUser" = true',
+        values: [req.session.user.game]
     })
 
     const cash = parseFloat(team.rows[0].cash) + cost
@@ -701,14 +706,14 @@ router.post("/player/edit", async (req, res) => {
     }
 
     await client.query({
-        text: "UPDATE teams SET cash = $1 WHERE team_id = $2",
-        values: [cash, team_id]
+        text: 'UPDATE teams SET cash = $1 WHERE game_id = $2 AND "isControlledByUser" = true',
+        values: [cash, req.session.user.game]
     })
 
     //Dans tous les cas on modifie le joueur
     await client.query({
-        text: "UPDATE players SET grade = $1, endurance = $2, role = $3",
-        values: [grade, endurance, role]
+        text: "UPDATE players SET grade = $1, endurance = $2, role = $3 WHERE player_id = $4",
+        values: [grade, endurance, role, player.player_id]
     })
 
     res.json(cash)
@@ -951,6 +956,7 @@ router.post('/simulation', async (req, res) => {
             totalExt += player.energie*player.grade
         })
 
+        console.log(totalDom + " - " + totalExt)
         //On calcule les buts marqués
         let goalScoredByLoser = getRandomInt(5) //Le perdant marque 5 buts max
         let goalScoredByWinner = goalScoredByLoser + 1 + getRandomInt(5)
