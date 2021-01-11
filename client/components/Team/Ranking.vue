@@ -48,7 +48,14 @@
     }
 </script>
 <style scoped>
-    .content {
+    /*
+* Prefixed by https://autoprefixer.github.io
+* PostCSS: v7.0.29,
+* Autoprefixer: v9.7.6
+* Browsers: last 4 version
+*/
+
+.content {
         display: block;
         width: 80%;
         margin: 20px auto;
@@ -71,6 +78,8 @@
     table.style-table tbody tr td:first-child,
     table.style-table tbody tr td:nth-child(2) {
         text-align: center;
+        width:-webkit-fit-content!important;
+        width:-moz-fit-content!important;
         width:fit-content!important;
     }
 
@@ -85,7 +94,8 @@
     .img-td {
         width: 30px;
         height: 30px;
-        object-fit: contain;
+        -o-object-fit: contain;
+           object-fit: contain;
         vertical-align: middle;
     }
 

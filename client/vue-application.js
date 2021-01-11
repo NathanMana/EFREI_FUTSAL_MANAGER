@@ -9,7 +9,6 @@ const EditPassword = window.httpVueLoader('./components/EditPassword.vue')
 
 /* TEAM */
 const HomeTeam = window.httpVueLoader('./components/Team/Home.vue')
-const Simulation = window.httpVueLoader('./components/Team/_Simulation.vue')
 const Ranking = window.httpVueLoader('./components/Team/Ranking.vue')
 const TeamProfile = window.httpVueLoader('./components/Team/TeamProfile.vue')
 const Recrutement = window.httpVueLoader('./components/Team/Recrutement.vue')
@@ -297,7 +296,6 @@ var app = new Vue({
         },
         async login(user){
             try {
-                console.log("cc")
                 const result = await axios.post('/api/login', user)
                 this.user = result.data
                 if(this.user.hasRunningGame){
@@ -609,7 +607,6 @@ var app = new Vue({
         async addTraining(training){
             try{
                 const result = await axios.post("/api/training/create",training)
-                console.log(result.data)
                 this.training = result.data
                 this.displaySuccess('Entrainement ajouté !')
             } catch(error){

@@ -68,7 +68,14 @@
 </script>
 <style scoped>
 
-    .content {
+    /*
+* Prefixed by https://autoprefixer.github.io
+* PostCSS: v7.0.29,
+* Autoprefixer: v9.7.6
+* Browsers: last 4 version
+*/
+
+.content {
         max-width: 700px;
         display: block;
         margin: 0 auto;
@@ -81,10 +88,17 @@
 
     article .article-head {
         background: var(--blue_light);
+        display: -webkit-box;
+        display: -ms-flexbox;
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: nowrap;
+        -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
+                justify-content: space-between;
+        -webkit-box-align: center;
+            -ms-flex-align: center;
+                align-items: center;
+        -ms-flex-wrap: nowrap;
+            flex-wrap: nowrap;
         padding: 10px;
         color: var(--white);
         font-weight: bold;
@@ -93,10 +107,17 @@
 
     article .article-content {
         background: var(--blue_semi_dark);
+        display: -webkit-box;
+        display: -ms-flexbox;
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: nowrap;
+        -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
+                justify-content: space-between;
+        -webkit-box-align: center;
+            -ms-flex-align: center;
+                align-items: center;
+        -ms-flex-wrap: nowrap;
+            flex-wrap: nowrap;
         padding: 10px;
         color: var(--white);
         font-size: 1.2em;
@@ -118,7 +139,8 @@
     .article-content img {
         width: 20px;
         height: 20px;
-        object-fit: contain;
+        -o-object-fit: contain;
+           object-fit: contain;
         vertical-align: middle;
     }
 

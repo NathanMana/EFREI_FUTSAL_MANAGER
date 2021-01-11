@@ -956,7 +956,6 @@ router.post('/simulation', async (req, res) => {
             totalExt += player.energie*player.grade
         })
 
-        console.log(totalDom + " - " + totalExt)
         //On calcule les buts marqués
         let goalScoredByLoser = getRandomInt(5) //Le perdant marque 5 buts max
         let goalScoredByWinner = goalScoredByLoser + 1 + getRandomInt(5)

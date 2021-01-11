@@ -59,8 +59,16 @@
            },
            simulation(){
                this.$emit('simulation')
+               this.canSimulate = false
            },
            close(){
+               //On retire les joueurs sélectionnés
+                this.canSimulate = false
+                let players = this.team.players.filter(c => c.selected === true)
+                players.forEach(player => {
+                    player.selected = false
+                });
+
                this.$emit("close")
            }
         }
@@ -68,7 +76,14 @@
 </script>
 <style scoped>
 
-    .style-table tbody tr:nth-child(2n){
+   /*
+* Prefixed by https://autoprefixer.github.io
+* PostCSS: v7.0.29,
+* Autoprefixer: v9.7.6
+* Browsers: last 4 version
+*/
+
+ .style-table tbody tr:nth-child(2n){
         background: var(--blue_semi_dark);
     }
 
@@ -95,10 +110,17 @@
     }
 
     table tr td {
+        display: -webkit-box;
+        display: -ms-flexbox;
         display: flex;
-        justify-content: left;
-        align-items: center;
-        flex-wrap: nowrap;
+        -webkit-box-pack: left;
+            -ms-flex-pack: left;
+                justify-content: left;
+        -webkit-box-align: center;
+            -ms-flex-align: center;
+                align-items: center;
+        -ms-flex-wrap: nowrap;
+            flex-wrap: nowrap;
         color: var(--white);
         padding: 5px 10px;
         width: 100%;

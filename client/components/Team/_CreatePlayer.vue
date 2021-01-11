@@ -89,6 +89,12 @@
                 
                 this.toggle()
                 this.$emit('create-player', this.player)
+                this.player.name = "",
+                this.player.firstName = ""
+                this.player.age= ""
+                this.player.poste= ""
+                this.player.endurance= ""
+                this.player.note= ""
             },
             toggle(){
                 this.$emit('toggle-view', false)
@@ -98,15 +104,23 @@
 </script>
 
 <style scoped>
+
 form{
+    display:-webkit-box;
+    display:-ms-flexbox;
     display:flex;
-    flex-wrap: wrap;
-    align-items: center;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
 }
 
 .form-colonne{
     margin: 10px;
-    flex: 0 0 calc(50% - 20px);
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 calc(50% - 20px);
+            flex: 0 0 calc(50% - 20px);
 }
 
 select, input{

@@ -92,7 +92,14 @@
 </script>
 
 <style scoped>
-    .content {
+    /*
+* Prefixed by https://autoprefixer.github.io
+* PostCSS: v7.0.29,
+* Autoprefixer: v9.7.6
+* Browsers: last 4 version
+*/
+
+.content {
         display: block;
         margin: 30px auto;
         max-width: 800px;
@@ -110,10 +117,15 @@
     }
 
     table td .content-td {
+        display: -webkit-box;
+        display: -ms-flexbox;
         display: flex;
-        justify-content: space-between;
+        -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
+                justify-content: space-between;
         background: var(--blue_semi_dark);
-        flex-wrap: nowrap;
+        -ms-flex-wrap: nowrap;
+            flex-wrap: nowrap;
     }
 
     .table-content {
@@ -121,19 +133,30 @@
     }
 
     .td-action {
+        display: -webkit-box;
+        display: -ms-flexbox;
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
+                justify-content: space-between;
+        -webkit-box-align: center;
+            -ms-flex-align: center;
+                align-items: center;
         width: 100%;
         background: var(--blue_dark);
         padding: 5px 10px;
-        flex-wrap: wrap;
+        -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
         font-size: 0.8em;
     }
 
     .td-action .action-buttons {
-        order: 1;
-        flex: 0 1 50%;
+        -webkit-box-ordinal-group: 2;
+            -ms-flex-order: 1;
+                order: 1;
+        -webkit-box-flex: 0;
+            -ms-flex: 0 1 50%;
+                flex: 0 1 50%;
     }
 
     .td-action .action-buttons a {
@@ -144,8 +167,12 @@
     }
 
     .td-description {
-        order: 2;
-        flex: 1 0 50%;
+        -webkit-box-ordinal-group: 3;
+            -ms-flex-order: 2;
+                order: 2;
+        -webkit-box-flex: 1;
+            -ms-flex: 1 0 50%;
+                flex: 1 0 50%;
     }
 
     .td-description span {

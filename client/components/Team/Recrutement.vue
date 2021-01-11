@@ -69,6 +69,13 @@
 </script>
 
 <style scoped>
+/*
+* Prefixed by https://autoprefixer.github.io
+* PostCSS: v7.0.29,
+* Autoprefixer: v9.7.6
+* Browsers: last 4 version
+*/
+
 
 .role {
     position: absolute;
@@ -87,10 +94,17 @@
 }
 
 .content{
+    display:-webkit-box;
+    display:-ms-flexbox;
     display:flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+    -webkit-box-pack: center;
+        -ms-flex-pack: center;
+            justify-content: center;
     padding: 30px;
 }
 article.article-recrutement {
@@ -104,7 +118,8 @@ article.article-recrutement {
 article.article-recrutement img{
     width: 100%;
     height: 150px;
-    object-fit: cover;
+    -o-object-fit: cover;
+       object-fit: cover;
 }
 article.article-recrutement h2.h2-content{
     background-color: var(--blue_light);
@@ -112,10 +127,17 @@ article.article-recrutement h2.h2-content{
 }
 
 .article-content-item {
+    display:-webkit-box;
+    display:-ms-flexbox;
     display:flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: space-between;
+    -ms-flex-wrap: nowrap;
+        flex-wrap: nowrap;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+    -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+            justify-content: space-between;
     font-size: 1.5em;
     margin: 10px 0;
 }

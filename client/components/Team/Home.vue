@@ -59,7 +59,14 @@
     }
 </script>
 <style scoped>
-    .style-table tbody tr:nth-child(2n){
+    /*
+* Prefixed by https://autoprefixer.github.io
+* PostCSS: v7.0.29,
+* Autoprefixer: v9.7.6
+* Browsers: last 4 version
+*/
+
+.style-table tbody tr:nth-child(2n){
         background: var(--blue_semi_dark);
     }
 
@@ -68,7 +75,8 @@
     }
     
     #classement td img {
-        object-fit: contain;
+        -o-object-fit: contain;
+           object-fit: contain;
         width: 20px;
         height: 20px;
     }
@@ -85,13 +93,20 @@
     }
 
     .content {
+        display: -webkit-box;
+        display: -ms-flexbox;
         display: flex;
-        justify-content: space-between;
-        flex-wrap: wrap;
+        -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
+                justify-content: space-between;
+        -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
     }
 
     .content .content-element {
-        flex: 0 1 600px;
+        -webkit-box-flex: 0;
+            -ms-flex: 0 1 600px;
+                flex: 0 1 600px;
         max-width: 800px;
     }
 
@@ -105,10 +120,17 @@
     }
 
     table tr td {
+        display: -webkit-box;
+        display: -ms-flexbox;
         display: flex;
-        justify-content: left;
-        align-items: center;
-        flex-wrap: nowrap;
+        -webkit-box-pack: left;
+            -ms-flex-pack: left;
+                justify-content: left;
+        -webkit-box-align: center;
+            -ms-flex-align: center;
+                align-items: center;
+        -ms-flex-wrap: nowrap;
+            flex-wrap: nowrap;
         color: var(--white);
         padding: 5px 10px;
         width: 100%;

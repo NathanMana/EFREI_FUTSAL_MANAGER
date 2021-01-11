@@ -118,6 +118,8 @@
     }
 </script>
 <style scoped>
+
+
 .style-table tbody tr:nth-child(2n){
     background: var(--blue_semi_dark);
 }
@@ -127,14 +129,21 @@
 }
     
 .content {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
+    -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+            justify-content: space-between;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
     padding-top: 5%;
 }
 
 .content .content-element {
-    flex: 1 1 600px;
+    -webkit-box-flex: 1;
+        -ms-flex: 1 1 600px;
+            flex: 1 1 600px;
     max-width: 800px;
     margin-right: 15px;
 }
@@ -150,10 +159,17 @@ table tr {
 }
 
 table tr td {
+    display: -webkit-box;
+    display: -ms-flexbox;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: nowrap;
+    -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+            justify-content: space-between;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
+    -ms-flex-wrap: nowrap;
+        flex-wrap: nowrap;
     color: var(--white);
     padding: 10px 10px;
     width: 100%;

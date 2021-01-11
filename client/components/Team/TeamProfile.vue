@@ -16,7 +16,7 @@
                     <tr v-for="player in teamprofile.players" :key="player.player_id">
                         <td>
                             <div class="content-td">
-                                <span class="style-rect">{{player.energie}}%</span>
+                                <span class="style-rect">{{Math.round(player.energie * 100) / 100}}%</span>
                                 <span class="table-content">{{player.firstname}} <span style="text-transform:uppercase;">{{player.name}}</span></span>
                             </div>
                             <div class="td-action">
@@ -53,7 +53,14 @@
 </script>
 
 <style scoped>
-    .content {
+    /*
+* Prefixed by https://autoprefixer.github.io
+* PostCSS: v7.0.29,
+* Autoprefixer: v9.7.6
+* Browsers: last 4 version
+*/
+
+.content {
         display: block;
         margin: 30px auto;
         max-width: 800px;
@@ -71,10 +78,15 @@
     }
 
     table td .content-td {
+        display: -webkit-box;
+        display: -ms-flexbox;
         display: flex;
-        justify-content: space-between;
+        -webkit-box-pack: justify;
+            -ms-flex-pack: justify;
+                justify-content: space-between;
         background: var(--blue_semi_dark);
-        flex-wrap: nowrap;
+        -ms-flex-wrap: nowrap;
+            flex-wrap: nowrap;
     }
 
     .table-content {
@@ -86,7 +98,8 @@
         width: 100%;
         background: var(--blue_dark);
         padding: 5px 10px;
-        flex-wrap: wrap;
+        -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
         font-size: 0.8em;
     }
 

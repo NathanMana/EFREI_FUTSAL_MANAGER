@@ -62,7 +62,14 @@
 </script>
 <style scoped>
 
-    article {
+   /*
+* Prefixed by https://autoprefixer.github.io
+* PostCSS: v7.0.29,
+* Autoprefixer: v9.7.6
+* Browsers: last 4 version
+*/
+
+ article {
         padding: 30px!important;
         position: relative;
     }

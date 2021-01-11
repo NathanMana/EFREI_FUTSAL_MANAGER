@@ -46,10 +46,16 @@
     }
 </script>
 <style scoped>
-    /* HOME */
+    
+
+/* HOME */
     section#home {
+        display: -webkit-box;
+        display: -ms-flexbox;
         display: flex;
-        align-items: center;
+        -webkit-box-align: center;
+            -ms-flex-align: center;
+                align-items: center;
         height: calc(100vh - 87px);;
         width: 100%;
     }
@@ -109,7 +115,9 @@
         width: 70px;
         height: 300px;
         background: var(--blue_dark);
-        transform: skewX(-20deg);
+        -webkit-transform: skewX(-20deg);
+            -ms-transform: skewX(-20deg);
+                transform: skewX(-20deg);
         content: "";
         position: absolute;
         left: 20px;

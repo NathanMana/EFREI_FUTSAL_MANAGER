@@ -90,15 +90,29 @@
 </script>
 
 <style scoped>
+/*
+* Prefixed by https://autoprefixer.github.io
+* PostCSS: v7.0.29,
+* Autoprefixer: v9.7.6
+* Browsers: last 4 version
+*/
+
 form{
+    display:-webkit-box;
+    display:-ms-flexbox;
     display:flex;
-    flex-wrap: wrap;
-    align-items: center;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+    -webkit-box-align: center;
+        -ms-flex-align: center;
+            align-items: center;
 }
 
 .form-colonne{
     margin: 10px;
-    flex: 0 0 calc(50% - 20px);
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 calc(50% - 20px);
+            flex: 0 0 calc(50% - 20px);
 }
 
 select, input{
